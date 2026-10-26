@@ -1,0 +1,13 @@
+{
+  "esempio": true,
+  "partite": [
+    {"data": "2026-09-07", "a": ["Marco", "Luca"], "b": ["Giulia", "Sara"], "set": [[6, 4], [6, 3]]},
+    {"data": "2026-09-14", "a": ["Marco", "Giulia"], "b": ["Luca", "Paolo"], "set": [[4, 6], [6, 3], [6, 4]]},
+    {"data": "2026-09-21", "a": ["Sara", "Paolo"], "b": ["Marco", "Luca"], "set": [[3, 6], [2, 6]]},
+    {"data": "2026-09-28", "a": ["Giulia", "Luca"], "b": ["Marco", "Sara"], "set": [[7, 5], [6, 7], [6, 3]]},
+    {"data": "2026-10-05", "a": ["Marco", "Paolo"], "b": ["Giulia", "Sara"], "set": [[6, 2], [6, 4]]},
+    {"data": "2026-10-12", "a": ["Luca", "Sara"], "b": ["Marco", "Giulia"], "set": [[6, 4], [3, 6], [4, 6]]},
+    {"data": "2026-10-19", "a": ["Marco", "Luca"], "b": ["Giulia", "Paolo"], "set": [[6, 3], [7, 6]]},
+    {"data": "2026-10-22", "a": ["Sara", "Giulia"], "b": ["Paolo", "Luca"], "set": [[6, 4], [6, 4]]}
+  ]
+}
