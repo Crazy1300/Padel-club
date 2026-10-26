@@ -1,0 +1,711 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Registro Padel</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@600;700&display=swap">
+<style>
+/* Layout: una colonna. Intestazione, cifre chiave, podio + classifica, risultati a schede, coppie, andamento, aggiunta partita. */
+:root{
+  color-scheme:light;
+  --bg:#f4f6f9; --surface:#ffffff; --ink:#0f1722; --ink2:#4a5565;
+  --line:#dfe4ec; --track:#e6eaf1;
+  --accent:#2a78d6; --accent-ink:#1c5cab; --on-accent:#ffffff; --accent-soft:#e3eefb;
+  --tint2:#b7d3f6; --tint3:#d6e6fa; --err:#b3261e;
+  --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a; --s4:#eda100; --s5:#e87ba4; --s6:#008300;
+  --display:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
+  --body:"Barlow",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#0d0f12; --surface:#171a1f; --ink:#eef1f5; --ink2:#b4bcc9;
+    --line:#262b33; --track:#262b33;
+    --accent:#3987e5; --accent-ink:#6da7ec; --on-accent:#0b0b0b; --accent-soft:#16283f;
+    --tint2:#1c5cab; --tint3:#184f95; --err:#ff8f86;
+    --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500; --s5:#d55181; --s6:#008300;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#0d0f12; --surface:#171a1f; --ink:#eef1f5; --ink2:#b4bcc9;
+  --line:#262b33; --track:#262b33;
+  --accent:#3987e5; --accent-ink:#6da7ec; --on-accent:#0b0b0b; --accent-soft:#16283f;
+  --tint2:#1c5cab; --tint3:#184f95; --err:#ff8f86;
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500; --s5:#d55181; --s6:#008300;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0; background:var(--bg); color:var(--ink); font-family:var(--body); font-size:15px; line-height:1.45;
+  padding-block:28px 56px;
+  padding-left:max(16px, env(safe-area-inset-left, 0px));
+  padding-right:max(16px, env(safe-area-inset-right, 0px));
+}
+.wrap{max-width:1040px; margin:0 auto; display:flex; flex-direction:column; gap:40px}
+h1,h2{font-family:var(--display); font-weight:700; margin:0; text-wrap:balance; letter-spacing:.01em}
+h1{font-size:clamp(34px,6vw,48px); line-height:1}
+h2{font-size:26px; line-height:1.1}
+p{margin:0}
+button,input,select{font:inherit; color:inherit}
+:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+[hidden]{display:none!important}
+
+.top{display:flex; gap:14px; align-items:center}
+.court{flex:none; width:44px; height:62px; color:var(--accent)}
+.top p{color:var(--ink2); margin-top:6px}
+.btn{appearance:none; border:1px solid transparent; background:var(--accent); color:var(--on-accent); font-weight:600; padding:10px 18px; border-radius:8px; cursor:pointer; min-height:44px}
+.btn:hover{filter:brightness(1.06)}
+.btn.ghost{background:transparent; color:var(--accent-ink); border-color:var(--line)}
+.btn.ghost:hover{background:var(--accent-soft); filter:none}
+.btn.small{min-height:34px; padding:4px 14px; font-size:13px}
+
+.notice{background:var(--accent-soft); border-radius:8px; padding:12px 16px}
+
+.figs{display:flex; flex-wrap:wrap; border-top:1px solid var(--line); border-bottom:1px solid var(--line)}
+.fig{flex:1 1 140px; padding:14px 20px 14px 0; min-width:0}
+.fig + .fig{padding-left:20px; border-left:1px solid var(--line)}
+.fig span{display:block; font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:var(--ink2)}
+.fig b{display:block; font-family:var(--display); font-size:34px; font-weight:700; line-height:1.1; font-variant-numeric:tabular-nums}
+@media (max-width:520px){ .fig + .fig{border-left:0; padding-left:0} .fig{flex-basis:45%} }
+
+section.blk{display:flex; flex-direction:column; gap:16px; min-width:0}
+.sechead{display:flex; flex-wrap:wrap; gap:8px 20px; align-items:flex-end; justify-content:space-between}
+.sub{color:var(--ink2); max-width:62ch}
+.empty{color:var(--ink2); padding:18px 0; border-top:1px solid var(--line)}
+.seg{display:flex; border:1px solid var(--line); border-radius:8px; overflow:hidden}
+.seg button{appearance:none; border:0; background:transparent; padding:6px 12px; cursor:pointer; font-size:13px; color:var(--ink2); min-height:34px}
+.seg button + button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--accent-soft); color:var(--accent-ink); font-weight:600}
+
+/* podio */
+.podium{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; align-items:end; max-width:640px; margin:0 auto; width:100%}
+.pod{display:flex; flex-direction:column; align-items:center; text-align:center; gap:2px; min-width:0}
+.pod .nm{font-weight:600; font-size:17px; max-width:100%; overflow-wrap:anywhere}
+.pod .st{font-size:13px; color:var(--ink2); font-variant-numeric:tabular-nums}
+.pod .blk2{width:100%; border-radius:8px 8px 0 0; display:flex; flex-direction:column; align-items:center; justify-content:flex-start; padding-top:10px; margin-top:8px}
+.pod .n{font-family:var(--display); font-weight:700; font-size:44px; line-height:1}
+.pod .pc{font-family:var(--display); font-weight:600; font-size:20px; font-variant-numeric:tabular-nums}
+.pod.p1 .blk2{height:150px; background:var(--accent); color:var(--on-accent)}
+.pod.p2 .blk2{height:110px; background:var(--tint2); color:var(--ink)}
+.pod.p3 .blk2{height:84px; background:var(--tint3); color:var(--ink)}
+
+/* tabelle */
+.tw{overflow-x:auto}
+table{border-collapse:collapse; width:100%; min-width:560px}
+th{font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink2); font-weight:500; text-align:right; padding:8px 10px; border-bottom:1px solid var(--line); white-space:nowrap}
+td{padding:11px 10px; border-bottom:1px solid var(--line); text-align:right; font-variant-numeric:tabular-nums; white-space:nowrap}
+th:first-child,td:first-child{padding-left:0}
+th.pos,td.rank{text-align:left; width:34px}
+td.rank{color:var(--ink2)}
+th.l,td.l{text-align:left}
+td.name{font-weight:600; white-space:normal}
+td.rank{font-family:var(--display); font-size:18px}
+tr.lead td.rank{color:var(--accent-ink); font-size:20px; font-weight:700}
+.pct{display:flex; align-items:center; gap:10px; justify-content:flex-end}
+.pct .trk{width:96px; height:6px; background:var(--track); border-radius:3px; overflow:hidden; flex:none}
+.pct .trk i{display:block; height:100%; background:var(--accent); border-radius:0 3px 3px 0}
+.pct b{min-width:3.4ch; text-align:right; font-weight:600}
+.form5{display:inline-flex; gap:3px}
+.form5 span{width:20px; height:20px; display:inline-grid; place-items:center; font-size:11px; font-weight:600; border-radius:4px}
+.form5 .w{background:var(--accent); color:var(--on-accent)}
+.form5 .s{border:1px solid var(--ink2); color:var(--ink2)}
+.pos{color:var(--accent-ink)}
+
+/* schede risultato */
+.cards{display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:14px}
+.card{background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:14px 16px; display:flex; flex-direction:column; gap:10px; min-width:0}
+.card .d{display:flex; justify-content:space-between; align-items:center; font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:var(--ink2)}
+.tm{display:grid; grid-template-columns:minmax(0,1fr) repeat(var(--n),2.1em); gap:0 4px; align-items:center}
+.tm + .tm{border-top:1px solid var(--line); padding-top:8px}
+.tm .who{min-width:0; overflow-wrap:anywhere; color:var(--ink2)}
+.tm.win .who{color:var(--ink); font-weight:600}
+.tm .g{text-align:center; font-family:var(--display); font-size:26px; font-weight:600; color:var(--ink2); font-variant-numeric:tabular-nums}
+.tm .g.won{color:var(--ink); font-weight:700}
+.tm.win .g.won{color:var(--accent-ink)}
+.chip{display:inline-grid; place-items:center; width:22px; height:22px; border-radius:4px; font-size:12px; font-weight:600; letter-spacing:0}
+.chip.w{background:var(--accent); color:var(--on-accent)}
+.chip.s{border:1px solid var(--ink2); color:var(--ink2)}
+.more{align-self:center}
+
+/* grafico */
+.legend{display:flex; flex-wrap:wrap; gap:6px 18px; font-size:14px}
+.legend span{display:inline-flex; align-items:center; gap:7px}
+.legend i{width:11px; height:11px; border-radius:3px; display:inline-block}
+.chartbox{position:relative}
+.chartbox svg{width:100%; height:auto; display:block; touch-action:pan-y}
+.ax{fill:var(--ink2); font-size:11px; font-family:var(--body)}
+.gl{stroke:var(--line); stroke-width:1}
+.axl{stroke:var(--ink2); stroke-width:1; opacity:.5}
+.ln{fill:none; stroke-width:2; stroke-linejoin:round; stroke-linecap:round}
+.dot{stroke:var(--bg); stroke-width:2}
+.cross{stroke:var(--ink2); stroke-width:1; stroke-dasharray:3 3}
+.tip{position:absolute; top:0; pointer-events:none; background:var(--surface); border:1px solid var(--line); border-radius:8px; padding:8px 10px; font-size:13px; box-shadow:0 4px 14px rgba(0,0,0,.12); min-width:140px; z-index:2}
+.tip b{display:block; margin-bottom:4px}
+.tip div{display:flex; align-items:center; gap:7px; font-variant-numeric:tabular-nums}
+.tip i{width:9px; height:9px; border-radius:2px; display:inline-block; flex:none}
+.tip em{margin-left:auto; font-style:normal; font-weight:600; padding-left:12px}
+
+/* aggiunta partita */
+.panel{background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:22px}
+.formgrid{display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:20px 28px; margin-top:16px}
+fieldset{border:0; padding:0; margin:0; min-width:0; display:flex; flex-direction:column; gap:10px}
+legend{padding:0; margin-bottom:8px; font-weight:600}
+label.f{display:flex; flex-direction:column; gap:4px; font-size:13px; color:var(--ink2); min-width:0}
+input[type=text],input[type=date],input[type=number],select{background:var(--bg); border:1px solid var(--line); border-radius:8px; padding:9px 11px; min-height:42px; width:100%; min-width:0}
+input[type=number]{text-align:center; padding-inline:4px}
+.sets{display:grid; grid-template-columns:auto 1fr 1fr; gap:8px 12px; align-items:center}
+.sets .h{font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink2)}
+.sets .lab{font-size:13px; color:var(--ink2)}
+.formfoot{display:flex; flex-wrap:wrap; gap:12px 16px; align-items:center; margin-top:20px}
+.status{font-size:14px; min-height:1.4em}
+.status.err{color:var(--err)}
+.out{margin-top:16px; display:flex; flex-direction:column; gap:10px}
+.out pre{margin:0; padding:12px 14px; background:var(--bg); border:1px solid var(--line); border-radius:8px; overflow-x:auto; font-size:13px; line-height:1.5}
+.out ol{margin:0; padding-left:20px; color:var(--ink2); display:flex; flex-direction:column; gap:4px}
+/* personalizzazione classifica */
+.tools{display:flex; gap:8px; flex-wrap:wrap}
+.panel2{background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:16px 18px}
+.chk{display:flex; flex-wrap:wrap; gap:6px 22px; align-items:center}
+.chk > b{font-weight:600; margin-right:6px}
+.chk label{display:inline-flex; align-items:center; gap:8px; min-height:34px; cursor:pointer}
+.chk input{width:18px; height:18px; accent-color:var(--accent)}
+.fgrid{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:14px 16px}
+.rng{display:flex; flex-direction:column; gap:4px; min-width:0}
+.rng > span{font-size:13px; color:var(--ink2)}
+.rng > div{display:flex; gap:6px}
+.fbar{margin-top:14px}
+.count{font-size:13px}
+.sortbtn{appearance:none; border:0; background:transparent; font:inherit; font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink2); cursor:pointer; padding:4px 0; display:inline-flex; gap:5px; align-items:center; white-space:nowrap; min-height:32px}
+.sortbtn:hover{color:var(--ink)}
+.sortbtn.on{color:var(--accent-ink); font-weight:600}
+.sortbtn .arr{font-size:10px; opacity:.75}
+
+/* navigazione: barra in alto su schermi larghi, barra in basso su telefono */
+.blk[data-screen]{display:none}
+.blk[data-screen].on{display:flex}
+.tabs{display:flex; gap:4px; position:sticky; top:0; z-index:20; background:var(--bg); border-bottom:1px solid var(--line); margin-top:-12px}
+.tabs a{display:inline-flex; align-items:center; gap:8px; padding:12px 14px; min-height:48px; color:var(--ink2); text-decoration:none; font-weight:500; border-bottom:3px solid transparent; margin-bottom:-1px}
+.tabs a:hover{color:var(--ink)}
+.tabs a[aria-current="page"]{color:var(--accent-ink); border-bottom-color:var(--accent); font-weight:600}
+.tabs svg{width:20px; height:20px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; flex:none}
+@media (max-width:699px){
+  body{padding-bottom:calc(88px + env(safe-area-inset-bottom, 0px))}
+  .tabs{position:fixed; top:auto; bottom:0; left:0; right:0; margin:0; gap:0; background:var(--surface); border-top:1px solid var(--line); border-bottom:0;
+    padding:0 max(4px, env(safe-area-inset-right, 0px)) env(safe-area-inset-bottom, 0px) max(4px, env(safe-area-inset-left, 0px))}
+  .tabs a{flex:1 1 0; min-width:0; flex-direction:column; justify-content:center; gap:3px; padding:8px 2px 7px; font-size:11px; border-bottom:0; border-top:3px solid transparent; margin:0}
+  .tabs a[aria-current="page"]{border-top-color:var(--accent)}
+}
+@media (prefers-reduced-motion: no-preference){ .pct .trk i{transition:width .3s ease} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <svg class="court" viewBox="0 0 44 62" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round" aria-hidden="true">
+      <rect x="2" y="2" width="40" height="58" rx="2"/>
+      <path d="M2 31h40M12 31V2M32 31V2M12 31v29M32 31v29" stroke-width="1.8" opacity=".55"/>
+      <path d="M2 31h40" stroke-width="3.5"/>
+    </svg>
+    <div>
+      <h1>Registro Padel</h1>
+      <p>Classifica, risultati e coppie delle nostre partite.</p>
+    </div>
+  </header>
+
+  <nav class="tabs" id="tabs" aria-label="Sezioni">
+    <a href="#classifica" data-go="classifica"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 20v-8h5v8M9 20V5h6v15M16 20v-6h5v6"/></svg><span>Classifica</span></a>
+    <a href="#risultati" data-go="risultati"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"/></svg><span>Risultati</span></a>
+    <a href="#coppie" data-go="coppie"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M3 20c0-3.5 2.7-6 6-6s6 2.5 6 6M15 14.5c3 0 6 1.5 6 5.5"/></svg><span>Coppie</span></a>
+    <a href="#andamento" data-go="andamento"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 20h18M4 16l5-5 4 3 7-8"/></svg><span>Andamento</span></a>
+    <a href="#aggiungi" data-go="aggiungi"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>Aggiungi</span></a>
+  </nav>
+
+  <div class="notice" id="notice" hidden></div>
+
+  <section class="blk" data-screen="classifica" aria-labelledby="h-rank">
+    <div class="figs" id="figs"></div>
+    <div class="sechead">
+      <div>
+        <h2 id="h-rank">Classifica</h2>
+        <p class="sub" id="rankSub">Parte dalla percentuale di vittorie più alta. Clicca sulle intestazioni per ordinare, usa Colonne e Filtri per personalizzare la tabella.</p>
+      </div>
+      <div class="tools">
+        <button class="btn ghost small" type="button" id="btnCols" aria-expanded="false" aria-controls="colsPanel">Colonne</button>
+        <button class="btn ghost small" type="button" id="btnFlt" aria-expanded="false" aria-controls="fltPanel">Filtri<span id="fltN"></span></button>
+      </div>
+    </div>
+    <div class="podium" id="podium"></div>
+    <div class="panel2" id="colsPanel" hidden></div>
+    <div class="panel2" id="fltPanel" hidden></div>
+    <p class="sub count" id="boardCount" aria-live="polite"></p>
+    <div id="board"></div>
+  </section>
+
+  <section class="blk" data-screen="risultati" aria-labelledby="h-res">
+    <div class="sechead">
+      <div>
+        <h2 id="h-res">Risultati</h2>
+        <p class="sub">Dalla più recente. In ogni scheda la coppia vincente è in alto.</p>
+      </div>
+      <label class="f" for="filter" style="min-width:200px">Filtra per giocatore
+        <select id="filter"><option value="">Tutti</option></select>
+      </label>
+    </div>
+    <div id="results"></div>
+  </section>
+
+  <section class="blk" data-screen="coppie" aria-labelledby="h-pairs">
+    <div>
+      <h2 id="h-pairs">Coppie</h2>
+      <p class="sub" id="pairsSub">Come rende ogni coppia quando gioca insieme.</p>
+    </div>
+    <div id="pairs"></div>
+  </section>
+
+  <section class="blk" data-screen="andamento" aria-labelledby="h-trend">
+    <div>
+      <h2 id="h-trend">Andamento</h2>
+      <p class="sub">Vittorie accumulate partita dopo partita, per i giocatori che hanno giocato di più.</p>
+    </div>
+    <div class="legend" id="legend"></div>
+    <div class="chartbox" id="trend"></div>
+  </section>
+
+  <section class="blk" data-screen="aggiungi" aria-labelledby="h-add">
+    <div>
+      <h2 id="h-add">Aggiungi una partita</h2>
+      <p class="sub">Compila il modulo, copia la riga che ti restituisce e incollala in <code>partite.json</code> su GitHub.</p>
+    </div>
+    <div class="panel">
+      <form id="addForm" novalidate>
+        <div class="formgrid">
+          <div style="display:flex;flex-direction:column;gap:20px;min-width:0">
+            <label class="f" for="f-date">Data<input type="date" id="f-date"></label>
+            <fieldset>
+              <legend>Coppia A</legend>
+              <label class="f" for="f-a1">Giocatore 1<input type="text" id="f-a1" list="plist" autocomplete="off" maxlength="30"></label>
+              <label class="f" for="f-a2">Giocatore 2<input type="text" id="f-a2" list="plist" autocomplete="off" maxlength="30"></label>
+            </fieldset>
+          </div>
+          <fieldset>
+            <legend>Coppia B</legend>
+            <label class="f" for="f-b1">Giocatore 1<input type="text" id="f-b1" list="plist" autocomplete="off" maxlength="30"></label>
+            <label class="f" for="f-b2">Giocatore 2<input type="text" id="f-b2" list="plist" autocomplete="off" maxlength="30"></label>
+          </fieldset>
+          <fieldset>
+            <legend>Punteggio (giochi per set)</legend>
+            <div class="sets">
+              <span></span><span class="h">Coppia A</span><span class="h">Coppia B</span>
+              <span class="lab">Set 1</span><input type="number" id="s1a" min="0" max="99" inputmode="numeric" aria-label="Set 1, coppia A"><input type="number" id="s1b" min="0" max="99" inputmode="numeric" aria-label="Set 1, coppia B">
+              <span class="lab">Set 2</span><input type="number" id="s2a" min="0" max="99" inputmode="numeric" aria-label="Set 2, coppia A"><input type="number" id="s2b" min="0" max="99" inputmode="numeric" aria-label="Set 2, coppia B">
+              <span class="lab">Set 3</span><input type="number" id="s3a" min="0" max="99" inputmode="numeric" aria-label="Set 3, coppia A"><input type="number" id="s3b" min="0" max="99" inputmode="numeric" aria-label="Set 3, coppia B">
+            </div>
+            <p class="sub" style="font-size:13px">Il terzo set serve solo se i primi due finiscono 1 a 1.</p>
+          </fieldset>
+        </div>
+        <datalist id="plist"></datalist>
+        <div class="formfoot">
+          <button class="btn" type="submit">Crea la riga</button>
+          <p class="status" id="status" role="status" aria-live="polite"></p>
+        </div>
+      </form>
+      <div class="out" id="out" hidden>
+        <pre id="snippet"></pre>
+        <div><button class="btn ghost small" type="button" id="copyBtn">Copia la riga</button> <span class="status" id="copied"></span></div>
+        <ol>
+          <li>Apri <code>partite.json</code> nel tuo repository su GitHub e premi l'icona della matita.</li>
+          <li>Incolla la riga dentro l'elenco <code>"partite"</code>, con una virgola dopo la riga precedente.</li>
+          <li>Premi “Commit changes”. Dopo un minuto circa il sito si aggiorna.</li>
+        </ol>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+(function(){
+  const $ = s => document.querySelector(s);
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const clean = s => String(s == null ? '' : s).trim().replace(/\s+/g, ' ');
+
+  let matches = [], filter = '', sortKey = 'pct', showAll = false, A = null;
+
+  function valid(m){
+    if(!m || typeof m.data !== 'string' || !Array.isArray(m.a) || !Array.isArray(m.b) || m.a.length !== 2 || m.b.length !== 2) return false;
+    if(!m.a.concat(m.b).every(n => typeof n === 'string' && clean(n))) return false;
+    if(!Array.isArray(m.set) || !m.set.length) return false;
+    let sa = 0, sb = 0;
+    for(const s of m.set){
+      if(!Array.isArray(s) || typeof s[0] !== 'number' || typeof s[1] !== 'number') return false;
+      if(s[0] > s[1]) sa++; else if(s[1] > s[0]) sb++;
+    }
+    return sa !== sb;
+  }
+
+  function analyze(ms){
+    const list = ms.filter(valid).map((m, i) => ({...m, _i:i})).sort((x, y) => x.data.localeCompare(y.data) || x._i - y._i);
+    const P = new Map(), C = new Map(), chron = [], rows = [];
+    let sets = 0;
+    const player = n => {
+      const k = clean(n).toLowerCase();
+      if(!P.has(k)) P.set(k, {key:k, name:clean(n), pg:0, v:0, s:0, gw:0, gl:0, form:[]});
+      return P.get(k);
+    };
+    for(const m of list){
+      let sa = 0, sb = 0, ga = 0, gb = 0;
+      for(const s of m.set){ ga += s[0]; gb += s[1]; if(s[0] > s[1]) sa++; else sb++; }
+      sets += m.set.length;
+      const aWin = sa > sb;
+      const winKeys = [];
+      for(const [t, win, gf, gc] of [[m.a, aWin, ga, gb], [m.b, !aWin, gb, ga]]){
+        const ps = t.map(player);
+        for(const p of ps){ p.pg++; win ? p.v++ : p.s++; p.gw += gf; p.gl += gc; p.form.push(win); if(win) winKeys.push(p.key); }
+        const key = ps.map(p => p.key).sort().join('|');
+        if(!C.has(key)) C.set(key, {names:ps.map(p => p.name).sort((x, y) => x.localeCompare(y, 'it')), pg:0, v:0, gw:0, gl:0});
+        const c = C.get(key); c.pg++; if(win) c.v++; c.gw += gf; c.gl += gc;
+      }
+      chron.push({data:m.data, winKeys});
+      const W = aWin ? m.a : m.b, L = aWin ? m.b : m.a;
+      rows.push({
+        data:m.data, win:W.map(n => player(n).name), lose:L.map(n => player(n).name),
+        wSets:m.set.map(s => aWin ? s[0] : s[1]), lSets:m.set.map(s => aWin ? s[1] : s[0])
+      });
+    }
+    rows.reverse();
+    return {players:[...P.values()], pairs:[...C.values()], sets, rows, chron, count:list.length};
+  }
+
+  const pct = o => o.pg ? o.v / o.pg : 0;
+  const diff = o => o.gw - o.gl;
+  const fmtDiff = n => n > 0 ? '+' + n : n < 0 ? '−' + Math.abs(n) : '0';
+  function fmtDate(s){
+    const p = s.split('-').map(Number);
+    if(p.length !== 3 || p.some(isNaN)) return s;
+    const o = {day:'numeric', month:'short'};
+    if(p[0] !== new Date().getFullYear()) o.year = 'numeric';
+    return new Intl.DateTimeFormat('it-IT', o).format(new Date(p[0], p[1] - 1, p[2]));
+  }
+  const pctCell = o => { const v = Math.round(pct(o) * 100); return `<div class="pct"><span class="trk"><i style="width:${v}%"></i></span><b>${v}%</b></div>`; };
+  // colonne della classifica: ogni campo si può ordinare, filtrare e nascondere
+  const COLS = [
+    {id:'pos',  label:'#',            get:p => p.rank,                                   dir:'asc'},
+    {id:'name', label:'Giocatore',    get:p => p.name,                                   dir:'asc', text:true, always:true},
+    {id:'pg',   label:'Giocate',      get:p => p.pg,                                     dir:'desc'},
+    {id:'v',    label:'Vinte',        get:p => p.v,                                      dir:'desc'},
+    {id:'s',    label:'Perse',        get:p => p.s,                                      dir:'desc'},
+    {id:'pct',  label:'% vittorie',   get:p => Math.round(pct(p) * 100),                 dir:'desc'},
+    {id:'diff', label:'Diff. giochi', get:p => diff(p),                                  dir:'desc'},
+    {id:'form', label:'Forma',        get:p => p.form.slice(-5).filter(Boolean).length,  dir:'desc', hint:'vittorie nelle ultime 5'}
+  ];
+  let sortCol = 'pct', sortDir = 'desc', flt = {}, openPanel = '';
+  let cols = new Set(COLS.map(c => c.id));
+  try {
+    const sv = JSON.parse(localStorage.getItem('padel-colonne') || 'null');
+    if(Array.isArray(sv)) cols = new Set(sv.filter(id => COLS.some(c => c.id === id)).concat('name'));
+  } catch(_){}
+
+  function rankedPlayers(){
+    const ps = A.players.slice().sort((a, b) => pct(b) - pct(a) || b.v - a.v || diff(b) - diff(a) || b.pg - a.pg || a.name.localeCompare(b.name, 'it'));
+    ps.forEach((p, i) => { p.rank = i + 1; });
+    return ps;
+  }
+  const hasVal = x => x !== '' && x != null;
+  function passes(p){
+    for(const c of COLS){
+      const f = flt[c.id]; if(!f) continue;
+      const v = c.get(p);
+      if(c.text){ if(f.q && !String(v).toLowerCase().includes(f.q.toLowerCase())) return false; }
+      else {
+        if(hasVal(f.min) && v < Number(f.min)) return false;
+        if(hasVal(f.max) && v > Number(f.max)) return false;
+      }
+    }
+    return true;
+  }
+  const activeFilters = () => Object.values(flt).filter(f => f && (f.q || hasVal(f.min) || hasVal(f.max))).length;
+  function viewPlayers(){
+    const col = COLS.find(c => c.id === sortCol), m = sortDir === 'asc' ? 1 : -1;
+    return rankedPlayers().filter(passes).sort((a, b) => {
+      const x = col.get(a), y = col.get(b);
+      const r = col.text ? String(x).localeCompare(String(y), 'it') : x - y;
+      return r * m || a.rank - b.rank;
+    });
+  }
+
+  function renderFigs(){
+    const last = A.rows.length ? fmtDate(A.rows[0].data) : '–';
+    $('#figs').innerHTML =
+      `<div class="fig"><span>Partite</span><b>${A.count}</b></div>` +
+      `<div class="fig"><span>Giocatori</span><b>${A.players.length}</b></div>` +
+      `<div class="fig"><span>Set giocati</span><b>${A.sets}</b></div>` +
+      `<div class="fig"><span>Ultima partita</span><b>${esc(last)}</b></div>`;
+  }
+
+  function renderBoard(){
+    const all = rankedPlayers();
+    const pod = $('#podium');
+    if(!all.length){
+      pod.innerHTML = '';
+      $('#board').innerHTML = '<p class="empty">La classifica compare dopo la prima partita.</p>';
+      $('#boardCount').textContent = '';
+      $('#colsPanel').hidden = true; $('#fltPanel').hidden = true;
+      return;
+    }
+    const order = all.length >= 3 ? [1, 0, 2] : all.length === 2 ? [1, 0] : [0];
+    pod.style.gridTemplateColumns = `repeat(${order.length},minmax(0,1fr))`;
+    pod.innerHTML = order.map(i => {
+      const p = all[i];
+      return `<div class="pod p${i + 1}"><span class="nm">${esc(p.name)}</span><span class="st">${p.v} vinte, ${p.s} perse</span>` +
+        `<div class="blk2"><span class="n">${i + 1}</span><span class="pc">${Math.round(pct(p) * 100)}%</span></div></div>`;
+    }).join('');
+    renderBoardControls();
+    renderBoardTable();
+  }
+
+  function renderBoardControls(){
+    $('#colsPanel').innerHTML = '<div class="chk"><b>Colonne visibili</b>' + COLS.map(c =>
+      `<label><input type="checkbox" data-colchk="${c.id}"${cols.has(c.id) ? ' checked' : ''}${c.always ? ' disabled' : ''}>${esc(c.label)}</label>`).join('') + '</div>';
+    const vis = COLS.filter(c => cols.has(c.id));
+    $('#fltPanel').innerHTML = '<div class="fgrid">' + vis.map(c => {
+      const f = flt[c.id] || {};
+      if(c.text) return `<label class="f" for="flt-${c.id}-q">${esc(c.label)}<input type="text" id="flt-${c.id}-q" data-flt="${c.id}" data-k="q" value="${esc(f.q || '')}" placeholder="Contiene…" autocomplete="off"></label>`;
+      const num = k => `<input type="number" step="1" inputmode="numeric" id="flt-${c.id}-${k}" data-flt="${c.id}" data-k="${k}" value="${esc(hasVal(f[k]) ? f[k] : '')}" placeholder="${k}" aria-label="${esc(c.label)}, ${k === 'min' ? 'minimo' : 'massimo'}">`;
+      return `<div class="rng"><span>${esc(c.label)}${c.hint ? ' (' + esc(c.hint) + ')' : ''}</span><div>${num('min')}${num('max')}</div></div>`;
+    }).join('') + '</div><div class="fbar"><button class="btn ghost small" type="button" data-act="reset-flt">Azzera filtri</button></div>';
+    $('#colsPanel').hidden = openPanel !== 'cols';
+    $('#fltPanel').hidden = openPanel !== 'flt';
+    $('#btnCols').setAttribute('aria-expanded', String(openPanel === 'cols'));
+    $('#btnFlt').setAttribute('aria-expanded', String(openPanel === 'flt'));
+    const n = activeFilters();
+    $('#fltN').textContent = n ? ' (' + n + ')' : '';
+  }
+
+  function renderBoardTable(){
+    const total = A.players.length, ps = viewPlayers();
+    const vis = COLS.filter(c => cols.has(c.id));
+    const head = vis.map(c => {
+      const on = sortCol === c.id;
+      const arrow = on ? (sortDir === 'asc' ? '▲' : '▼') : '↕';
+      return `<th class="${c.text ? 'l' : ''}${c.id === 'pos' ? ' pos' : ''}" aria-sort="${on ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'}">` +
+        `<button class="sortbtn${on ? ' on' : ''}" type="button" data-col="${c.id}"${c.hint ? ` title="${esc(c.hint)}"` : ''}>${esc(c.label)}<span class="arr" aria-hidden="true">${arrow}</span></button></th>`;
+    }).join('');
+    const cell = {
+      pos:  p => `<td class="rank">${p.rank}</td>`,
+      name: p => `<td class="name l">${esc(p.name)}</td>`,
+      pg:   p => `<td>${p.pg}</td>`,
+      v:    p => `<td>${p.v}</td>`,
+      s:    p => `<td>${p.s}</td>`,
+      pct:  p => `<td>${pctCell(p)}</td>`,
+      diff: p => `<td class="${diff(p) > 0 ? 'pos' : ''}">${fmtDiff(diff(p))}</td>`,
+      form: p => `<td><span class="form5" aria-label="Ultime partite">${p.form.slice(-5).map(w => w ? '<span class="w" title="Vinta">V</span>' : '<span class="s" title="Persa">S</span>').join('')}</span></td>`
+    };
+    const body = ps.length
+      ? ps.map(p => `<tr${p.rank === 1 ? ' class="lead"' : ''}>${vis.map(c => cell[c.id](p)).join('')}</tr>`).join('')
+      : `<tr><td class="l" colspan="${vis.length}" style="color:var(--ink2)">Nessun giocatore corrisponde ai filtri.</td></tr>`;
+    $('#board').innerHTML = `<div class="tw"><table><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></div>`;
+    const col = COLS.find(c => c.id === sortCol);
+    $('#boardCount').textContent = `${ps.length} di ${total} giocatori. Ordinata per ${col.label.toLowerCase()}, ${sortDir === 'asc' ? 'dal più basso al più alto' : 'dal più alto al più basso'}.`;
+    const n = activeFilters();
+    $('#fltN').textContent = n ? ' (' + n + ')' : '';
+  }
+
+  function renderResults(){
+    const sel = $('#filter');
+    const names = A.players.map(p => p.name).sort((x, y) => x.localeCompare(y, 'it'));
+    if(filter && !names.some(n => n.toLowerCase() === filter)) filter = '';
+    sel.innerHTML = '<option value="">Tutti</option>' + names.map(n => `<option value="${esc(n.toLowerCase())}"${n.toLowerCase() === filter ? ' selected' : ''}>${esc(n)}</option>`).join('');
+    const rows = A.rows.filter(r => !filter || r.win.concat(r.lose).some(n => n.toLowerCase() === filter));
+    const el = $('#results');
+    if(!rows.length){ el.innerHTML = `<p class="empty">${A.rows.length ? 'Nessuna partita per questo giocatore.' : 'I risultati compaiono dopo la prima partita.'}</p>`; return; }
+    const shown = showAll ? rows : rows.slice(0, 6);
+    const cards = shown.map(r => {
+      const n = r.wSets.length;
+      let chip = '';
+      if(filter){ const won = r.win.some(x => x.toLowerCase() === filter); chip = `<span class="chip ${won ? 'w' : 's'}" title="${won ? 'Vinta' : 'Persa'}">${won ? 'V' : 'S'}</span>`; }
+      const line = (names, mine, theirs, win) =>
+        `<div class="tm${win ? ' win' : ''}" style="--n:${n}"><span class="who">${esc(names.join(' · '))}</span>` +
+        mine.map((g, i) => `<span class="g${g > theirs[i] ? ' won' : ''}">${g}</span>`).join('') + '</div>';
+      return `<article class="card"><div class="d"><span>${esc(fmtDate(r.data))}</span>${chip}</div>${line(r.win, r.wSets, r.lSets, true)}${line(r.lose, r.lSets, r.wSets, false)}</article>`;
+    }).join('');
+    const more = rows.length > 6 ? `<button class="btn ghost small more" type="button" id="moreBtn">${showAll ? 'Mostra solo le ultime 6' : 'Mostra tutte (' + rows.length + ')'}</button>` : '';
+    el.innerHTML = `<div class="cards">${cards}</div><div style="display:flex;justify-content:center;margin-top:14px">${more}</div>`;
+  }
+
+  function renderPairs(){
+    const el = $('#pairs'), sub = $('#pairsSub');
+    if(!A.pairs.length){ el.innerHTML = '<p class="empty">Le coppie compaiono dopo la prima partita.</p>'; return; }
+    const cs = A.pairs.slice().sort((a, b) => pct(b) - pct(a) || b.v - a.v || b.pg - a.pg || diff(b) - diff(a));
+    const best = cs.find(c => c.pg >= 2);
+    sub.textContent = best ? `Miglior coppia con almeno 2 partite: ${best.names.join(' e ')}, ${best.v} vittorie su ${best.pg}.` : 'Una coppia entra nel confronto dalla seconda partita giocata insieme.';
+    const body = cs.map(c => `<tr><td class="name l" style="padding-left:0;width:auto;color:var(--ink)">${esc(c.names.join(' e '))}</td><td>${c.pg}</td><td>${c.v}</td><td>${c.pg - c.v}</td><td>${pctCell(c)}</td><td class="${diff(c) > 0 ? 'pos' : ''}">${fmtDiff(diff(c))}</td></tr>`).join('');
+    el.innerHTML = `<div class="tw"><table><thead><tr><th class="l" style="width:auto">Coppia</th><th>Giocate</th><th>Vinte</th><th>Perse</th><th>% vittorie</th><th>Diff. giochi</th></tr></thead><tbody>${body}</tbody></table></div>`;
+  }
+
+  function renderTrend(){
+    const box = $('#trend'), N = A.chron.length;
+    if(N < 2){ box.innerHTML = '<p class="empty">Il grafico compare dalla seconda partita.</p>'; $('#legend').innerHTML = ''; return; }
+    const top = A.players.slice().sort((a, b) => b.pg - a.pg || b.v - a.v).slice(0, 6);
+    const cum = top.map(p => { let w = 0; return A.chron.map(m => (m.winKeys.includes(p.key) && w++, w)); });
+    const maxV = Math.max(1, ...cum.map(c => c[N - 1]));
+    const step = maxV <= 6 ? 1 : Math.ceil(maxV / 6);
+    const yMax = Math.ceil(maxV / step) * step;
+    const W = 720, H = 300, L = 38, R = 16, T = 12, B = 34, pw = W - L - R, ph = H - T - B;
+    const X = i => L + (N === 1 ? pw / 2 : i / (N - 1) * pw);
+    const Y = v => T + ph - v / yMax * ph;
+    let g = '';
+    for(let v = 0; v <= yMax; v += step) g += `<line class="${v === 0 ? 'axl' : 'gl'}" x1="${L}" x2="${W - R}" y1="${Y(v)}" y2="${Y(v)}"/><text class="ax" x="${L - 8}" y="${Y(v) + 4}" text-anchor="end">${v}</text>`;
+    const tickEvery = Math.max(1, Math.ceil(N / 8));
+    for(let i = 0; i < N; i++) if(i % tickEvery === 0 || i === N - 1) g += `<text class="ax" x="${X(i)}" y="${H - 12}" text-anchor="middle">${i + 1}</text>`;
+    g += `<text class="ax" x="${L + pw / 2}" y="${H - 0}" text-anchor="middle" style="font-size:10px;letter-spacing:.06em">PARTITA N.</text>`;
+    const lines = top.map((p, k) => `<polyline class="ln" style="stroke:var(--s${k + 1})" points="${cum[k].map((v, i) => X(i).toFixed(1) + ',' + Y(v).toFixed(1)).join(' ')}"/>`).join('');
+    const ends = top.map((p, k) => `<circle class="dot" style="fill:var(--s${k + 1})" cx="${X(N - 1)}" cy="${Y(cum[k][N - 1])}" r="4.5"/>`).join('');
+    const hov = top.map((p, k) => `<circle class="dot hv" style="fill:var(--s${k + 1})" r="5" cx="-20" cy="-20"/>`).join('');
+    box.innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Vittorie accumulate per giocatore, ${N} partite">${g}${lines}${ends}<line class="cross" id="cross" y1="${T}" y2="${T + ph}" x1="-10" x2="-10"/>${hov}<rect id="hit" x="${L}" y="${T}" width="${pw}" height="${ph}" fill="transparent"/></svg><div class="tip" id="tip" hidden></div>`;
+    $('#legend').innerHTML = top.map((p, k) => `<span><i style="background:var(--s${k + 1})"></i>${esc(p.name)}</span>`).join('');
+
+    const svg = box.querySelector('svg'), tip = $('#tip'), cross = $('#cross'), hvs = [...box.querySelectorAll('.hv')];
+    function at(ev){
+      const r = svg.getBoundingClientRect();
+      const x = (ev.clientX - r.left) / r.width * W;
+      const i = Math.max(0, Math.min(N - 1, Math.round((x - L) / pw * (N - 1))));
+      cross.setAttribute('x1', X(i)); cross.setAttribute('x2', X(i));
+      hvs.forEach((c, k) => { c.setAttribute('cx', X(i)); c.setAttribute('cy', Y(cum[k][i])); });
+      const rows = top.map((p, k) => ({p, k, v:cum[k][i]})).sort((a, b) => b.v - a.v)
+        .map(o => `<div><i style="background:var(--s${o.k + 1})"></i>${esc(o.p.name)}<em>${o.v}</em></div>`).join('');
+      tip.innerHTML = `<b>Partita ${i + 1}, ${esc(fmtDate(A.chron[i].data))}</b>${rows}`;
+      tip.hidden = false;
+      const px = X(i) / W * r.width, tw = tip.offsetWidth;
+      tip.style.left = Math.max(0, Math.min(r.width - tw, px + 14)) + 'px';
+    }
+    function out(){ tip.hidden = true; cross.setAttribute('x1', -10); cross.setAttribute('x2', -10); hvs.forEach(c => c.setAttribute('cx', -20)); }
+    const hit = $('#hit');
+    hit.addEventListener('pointermove', at); hit.addEventListener('pointerdown', at); hit.addEventListener('pointerleave', out);
+  }
+
+  function renderAll(){
+    if(!A) return;
+    renderFigs(); renderBoard(); renderResults(); renderPairs(); renderTrend();
+    $('#plist').innerHTML = A.players.map(p => `<option value="${esc(p.name)}"></option>`).join('');
+  }
+
+  // eventi
+  document.addEventListener('click', e => {
+    const t = e.target.closest('button'); if(!t) return;
+    if(t.id === 'moreBtn'){ showAll = !showAll; renderResults(); }
+    else if(t.dataset.col){
+      const c = COLS.find(x => x.id === t.dataset.col);
+      if(sortCol === c.id) sortDir = sortDir === 'asc' ? 'desc' : 'asc'; else { sortCol = c.id; sortDir = c.dir; }
+      renderBoardTable();
+    }
+    else if(t.id === 'btnCols' || t.id === 'btnFlt'){
+      const want = t.id === 'btnCols' ? 'cols' : 'flt';
+      openPanel = openPanel === want ? '' : want;
+      renderBoardControls();
+    }
+    else if(t.dataset.act === 'reset-flt'){ flt = {}; renderBoardControls(); renderBoardTable(); }
+  });
+  $('#filter').addEventListener('change', e => { filter = e.target.value; showAll = false; renderResults(); });
+  document.addEventListener('change', e => {
+    const id = e.target.dataset && e.target.dataset.colchk;
+    if(!id) return;
+    if(e.target.checked) cols.add(id); else { cols.delete(id); delete flt[id]; }
+    cols.add('name');
+    if(!cols.has(sortCol)){ sortCol = cols.has('pct') ? 'pct' : 'name'; sortDir = sortCol === 'pct' ? 'desc' : 'asc'; }
+    try { localStorage.setItem('padel-colonne', JSON.stringify([...cols])); } catch(_){}
+    renderBoardControls(); renderBoardTable();
+  });
+  document.addEventListener('input', e => {
+    const id = e.target.dataset && e.target.dataset.flt;
+    if(!id) return;
+    (flt[id] = flt[id] || {})[e.target.dataset.k] = e.target.value;
+    renderBoardTable();
+  });
+
+  const status = (m, err) => { const s = $('#status'); s.textContent = m; s.className = 'status' + (err ? ' err' : ''); };
+  $('#addForm').addEventListener('submit', e => {
+    e.preventDefault();
+    $('#out').hidden = true;
+    const date = $('#f-date').value;
+    const names = ['a1','a2','b1','b2'].map(k => clean($('#f-' + k).value));
+    if(!date) return status('Scegli la data della partita.', true);
+    if(names.some(n => !n)) return status('Inserisci i nomi di tutti e quattro i giocatori.', true);
+    if(new Set(names.map(n => n.toLowerCase())).size < 4) return status('Ogni giocatore può comparire una sola volta.', true);
+    const sets = []; let gap = false;
+    for(let i = 1; i <= 3; i++){
+      const x = $('#s' + i + 'a').value, y = $('#s' + i + 'b').value;
+      if(x === '' && y === ''){ gap = true; continue; }
+      if(x === '' || y === '') return status(`Completa i giochi di entrambe le coppie nel set ${i}.`, true);
+      if(gap) return status('Compila i set in ordine, senza saltarne uno.', true);
+      const nx = Number(x), ny = Number(y);
+      if(!Number.isInteger(nx) || !Number.isInteger(ny) || nx < 0 || ny < 0) return status('I giochi devono essere numeri interi.', true);
+      if(nx === ny) return status(`Il set ${i} non può finire in parità.`, true);
+      sets.push([nx, ny]);
+    }
+    if(!sets.length) return status('Inserisci almeno il primo set.', true);
+    const sa = sets.filter(s => s[0] > s[1]).length;
+    if(sa * 2 === sets.length) return status('I set sono 1 a 1: aggiungi il set decisivo.', true);
+    status('');
+    const row = `{"data": "${date}", "a": ${JSON.stringify([names[0], names[1]])}, "b": ${JSON.stringify([names[2], names[3]])}, "set": ${JSON.stringify(sets)}}`;
+    $('#snippet').textContent = row;
+    $('#copied').textContent = '';
+    $('#out').hidden = false;
+  });
+  $('#copyBtn').addEventListener('click', () => {
+    const txt = $('#snippet').textContent, ok = $('#copied');
+    const fallback = () => { const r = document.createRange(); r.selectNodeContents($('#snippet')); const s = getSelection(); s.removeAllRanges(); s.addRange(r); ok.textContent = 'Riga selezionata: premi Copia dal tuo dispositivo.'; };
+    try { navigator.clipboard.writeText(txt).then(() => { ok.textContent = 'Copiata.'; }, fallback); } catch(_){ fallback(); }
+  });
+
+  // navigazione tra schermate
+  const SCREENS = ['classifica', 'risultati', 'coppie', 'andamento', 'aggiungi'];
+  let current = 'classifica';
+  function go(name){
+    if(!SCREENS.includes(name)) name = 'classifica';
+    current = name;
+    document.querySelectorAll('.blk[data-screen]').forEach(s => s.classList.toggle('on', s.dataset.screen === name));
+    document.querySelectorAll('#tabs a').forEach(a => {
+      if(a.dataset.go === name) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
+    });
+  }
+  window.addEventListener('hashchange', () => { go(location.hash.slice(1)); window.scrollTo(0, 0); });
+  go(location.hash.slice(1));
+  // scorrimento con il dito: sinistra e destra cambiano schermata (non sopra tabelle, grafico e campi)
+  let sx = 0, sy = 0, swipeOk = false;
+  document.addEventListener('touchstart', e => {
+    const t = e.touches[0]; sx = t.clientX; sy = t.clientY;
+    swipeOk = e.touches.length === 1 && !e.target.closest('.tw, .chartbox, input, select, textarea, pre, nav');
+  }, {passive:true});
+  document.addEventListener('touchend', e => {
+    if(!swipeOk) return;
+    const t = e.changedTouches[0], dx = t.clientX - sx, dy = t.clientY - sy;
+    if(Math.abs(dx) > 80 && Math.abs(dy) < 45){
+      const i = SCREENS.indexOf(current) + (dx < 0 ? 1 : -1);
+      if(i >= 0 && i < SCREENS.length) location.hash = SCREENS[i];
+    }
+  }, {passive:true});
+
+  // avvio
+  const d = new Date(), z = n => String(n).padStart(2, '0');
+  $('#f-date').value = `${d.getFullYear()}-${z(d.getMonth() + 1)}-${z(d.getDate())}`;
+  A = analyze([]); renderAll();
+
+  fetch('partite.json', {cache:'no-store'})
+    .then(r => { if(!r.ok) throw new Error(r.status); return r.json(); })
+    .then(j => {
+      matches = Array.isArray(j.partite) ? j.partite : [];
+      A = analyze(matches); renderAll();
+      const n = $('#notice');
+      if(j.esempio === true){ n.innerHTML = '<b>Dati di esempio.</b> Per usare le vostre partite sostituisci il contenuto di <code>partite.json</code> e togli la riga <code>"esempio": true</code>.'; n.hidden = false; }
+      else if(!A.count){ n.textContent = 'Nessuna partita valida in partite.json. Aggiungi la prima dalla scheda “Aggiungi”.'; n.hidden = false; }
+    })
+    .catch(() => {
+      const n = $('#notice');
+      n.textContent = 'Non riesco a leggere partite.json. Apri il sito dal link di GitHub Pages: aprendo il file direttamente dal computer il browser blocca la lettura.';
+      n.hidden = false;
+    });
+})();
+</script>
+</body>
+</html>
