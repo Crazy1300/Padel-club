@@ -3,7 +3,17 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Registro Padel</title>
+<title>Padel Stats &amp; Rankings</title>
+<meta name="description" content="Classifica, risultati e statistiche delle nostre partite di padel.">
+<meta name="theme-color" content="#f4f6f9" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0d0f12" media="(prefers-color-scheme: dark)">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Padel Stats">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@600;700&display=swap">
 <style>
 /* Layout: una colonna. Intestazione, cifre chiave, podio + classifica, risultati a schede, coppie, andamento, aggiunta partita. */
@@ -39,7 +49,7 @@
 html{-webkit-text-size-adjust:100%}
 body{
   margin:0; background:var(--bg); color:var(--ink); font-family:var(--body); font-size:15px; line-height:1.45;
-  padding-block:28px 56px;
+  padding-top:calc(28px + env(safe-area-inset-top, 0px)); padding-bottom:56px;
   padding-left:max(16px, env(safe-area-inset-left, 0px));
   padding-right:max(16px, env(safe-area-inset-right, 0px));
 }
@@ -49,11 +59,13 @@ h1{font-size:clamp(34px,6vw,48px); line-height:1}
 h2{font-size:26px; line-height:1.1}
 p{margin:0}
 button,input,select{font:inherit; color:inherit}
+input,select{font-size:16px} /* sotto i 16px iOS ingrandisce la pagina quando tocchi un campo */
+button{touch-action:manipulation; -webkit-tap-highlight-color:transparent}
 :focus-visible{outline:2px solid var(--accent); outline-offset:2px}
 [hidden]{display:none!important}
 
 .top{display:flex; gap:14px; align-items:center}
-.court{flex:none; width:44px; height:62px; color:var(--accent)}
+.racket{flex:none; width:46px; height:71px; color:var(--accent); transform:rotate(-14deg)}
 .top p{color:var(--ink2); margin-top:6px}
 .btn{appearance:none; border:1px solid transparent; background:var(--accent); color:var(--on-accent); font-weight:600; padding:10px 18px; border-radius:8px; cursor:pointer; min-height:44px}
 .btn:hover{filter:brightness(1.06)}
@@ -62,6 +74,9 @@ button,input,select{font:inherit; color:inherit}
 .btn.small{min-height:34px; padding:4px 14px; font-size:13px}
 
 .notice{background:var(--accent-soft); border-radius:8px; padding:12px 16px}
+.install{display:flex; flex-wrap:wrap; gap:10px 16px; align-items:center; justify-content:space-between}
+.install p{flex:1 1 260px; min-width:0}
+.install .acts{display:flex; gap:8px; flex-wrap:wrap}
 
 .figs{display:flex; flex-wrap:wrap; border-top:1px solid var(--line); border-bottom:1px solid var(--line)}
 .fig{flex:1 1 140px; padding:14px 20px 14px 0; min-width:0}
@@ -112,6 +127,7 @@ tr.lead td.rank{color:var(--accent-ink); font-size:20px; font-weight:700}
 .form5 .w{background:var(--accent); color:var(--on-accent)}
 .form5 .s{border:1px solid var(--ink2); color:var(--ink2)}
 .pos{color:var(--accent-ink)}
+.rk{display:none}
 
 /* schede risultato */
 .cards{display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:14px}
@@ -203,6 +219,26 @@ input[type=number]{text-align:center; padding-inline:4px}
     padding:0 max(4px, env(safe-area-inset-right, 0px)) env(safe-area-inset-bottom, 0px) max(4px, env(safe-area-inset-left, 0px))}
   .tabs a{flex:1 1 0; min-width:0; flex-direction:column; justify-content:center; gap:3px; padding:8px 2px 7px; font-size:11px; border-bottom:0; border-top:3px solid transparent; margin:0}
   .tabs a[aria-current="page"]{border-top-color:var(--accent)}
+  /* tabelle larghe: la colonna del nome resta ferma mentre scorri di lato; la posizione passa dentro il nome */
+  th.pos,td.rank{display:none}
+  th.l,td.name{position:sticky; left:0; z-index:1; background:var(--bg); padding-left:0; box-shadow:1px 0 0 var(--line)}
+  .rk{display:inline-block; min-width:1.7em; color:var(--ink2); font-family:var(--display); font-size:17px; font-weight:600}
+  tr.lead .rk{color:var(--accent-ink)}
+  .pod .nm{font-size:15px}
+  h2{font-size:24px}
+  th,td{padding-left:8px; padding-right:8px}
+  .pct{gap:8px}
+  .pct .trk{width:48px}
+}
+@media (pointer:coarse){
+  .seg button{min-height:44px; padding:8px 14px}
+  .btn.small{min-height:44px}
+  .sortbtn{min-height:44px}
+  .chk label{min-height:44px}
+}
+@media (min-width:700px) and (max-width:1024px){
+  .wrap{gap:34px}
+  .cards{grid-template-columns:repeat(auto-fill,minmax(300px,1fr))}
 }
 @media (prefers-reduced-motion: no-preference){ .pct .trk i{transition:width .3s ease} }
 </style>
@@ -210,13 +246,9 @@ input[type=number]{text-align:center; padding-inline:4px}
 <body>
 <div class="wrap">
   <header class="top">
-    <svg class="court" viewBox="0 0 44 62" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round" aria-hidden="true">
-      <rect x="2" y="2" width="40" height="58" rx="2"/>
-      <path d="M2 31h40M12 31V2M32 31V2M12 31v29M32 31v29" stroke-width="1.8" opacity=".55"/>
-      <path d="M2 31h40" stroke-width="3.5"/>
-    </svg>
+    <svg class="racket" viewBox="0 0 48 74" aria-hidden="true"><path d="M24 2C38 2 45 12 45 25C45 36 38 44 31 49L29 55H19L17 49C10 44 3 36 3 25C3 12 10 2 24 2Z" fill="var(--accent-soft)" stroke="currentColor" stroke-width="2.6" stroke-linejoin="round"/><g fill="currentColor"><circle cx="18" cy="10" r="1.9"/><circle cx="24" cy="10" r="1.9"/><circle cx="30" cy="10" r="1.9"/><circle cx="12" cy="16" r="1.9"/><circle cx="18" cy="16" r="1.9"/><circle cx="24" cy="16" r="1.9"/><circle cx="30" cy="16" r="1.9"/><circle cx="36" cy="16" r="1.9"/><circle cx="12" cy="22" r="1.9"/><circle cx="18" cy="22" r="1.9"/><circle cx="24" cy="22" r="1.9"/><circle cx="30" cy="22" r="1.9"/><circle cx="36" cy="22" r="1.9"/><circle cx="12" cy="28" r="1.9"/><circle cx="18" cy="28" r="1.9"/><circle cx="24" cy="28" r="1.9"/><circle cx="30" cy="28" r="1.9"/><circle cx="36" cy="28" r="1.9"/><circle cx="15" cy="34" r="1.9"/><circle cx="21" cy="34" r="1.9"/><circle cx="27" cy="34" r="1.9"/><circle cx="33" cy="34" r="1.9"/><circle cx="18" cy="40" r="1.9"/><circle cx="24" cy="40" r="1.9"/><circle cx="30" cy="40" r="1.9"/></g><path d="M19 55h10v4H19z" fill="currentColor"/><rect x="20.5" y="59" width="7" height="13" rx="2.5" fill="currentColor"/><path d="M20.5 63h7M20.5 67h7" stroke="var(--bg)" stroke-width="1.2"/></svg>
     <div>
-      <h1>Registro Padel</h1>
+      <h1>Padel Stats &amp; Rankings</h1>
       <p>Classifica, risultati e coppie delle nostre partite.</p>
     </div>
   </header>
@@ -233,8 +265,9 @@ input[type=number]{text-align:center; padding-inline:4px}
 
   <div class="notice" id="notice" hidden></div>
 
+  <div class="notice install" id="install" hidden></div>
+
   <section class="blk" data-screen="classifica" aria-labelledby="h-rank">
-    <div class="figs" id="figs"></div>
     <div class="sechead">
       <div>
         <h2 id="h-rank">Classifica</h2>
@@ -368,7 +401,7 @@ input[type=number]{text-align:center; padding-inline:4px}
     let sets = 0;
     const player = n => {
       const k = clean(n).toLowerCase();
-      if(!P.has(k)) P.set(k, {key:k, name:clean(n), pg:0, v:0, s:0, gw:0, gl:0, form:[]});
+      if(!P.has(k)) P.set(k, {key:k, name:clean(n), pg:0, v:0, s:0, sw:0, sl:0, gw:0, gl:0, form:[]});
       return P.get(k);
     };
     for(const m of list){
@@ -377,9 +410,9 @@ input[type=number]{text-align:center; padding-inline:4px}
       sets += m.set.length;
       const aWin = sa > sb;
       const winKeys = [];
-      for(const [t, win, gf, gc] of [[m.a, aWin, ga, gb], [m.b, !aWin, gb, ga]]){
+      for(const [t, win, gf, gc, sw, sl] of [[m.a, aWin, ga, gb, sa, sb], [m.b, !aWin, gb, ga, sb, sa]]){
         const ps = t.map(player);
-        for(const p of ps){ p.pg++; win ? p.v++ : p.s++; p.gw += gf; p.gl += gc; p.form.push(win); if(win) winKeys.push(p.key); }
+        for(const p of ps){ p.pg++; win ? p.v++ : p.s++; p.sw += sw; p.sl += sl; p.gw += gf; p.gl += gc; p.form.push(win); if(win) winKeys.push(p.key); }
         const key = ps.map(p => p.key).sort().join('|');
         if(!C.has(key)) C.set(key, {names:ps.map(p => p.name).sort((x, y) => x.localeCompare(y, 'it')), pg:0, v:0, gw:0, gl:0});
         const c = C.get(key); c.pg++; if(win) c.v++; c.gw += gf; c.gl += gc;
@@ -414,13 +447,15 @@ input[type=number]{text-align:center; padding-inline:4px}
     {id:'v',    label:'Vinte',        get:p => p.v,                                      dir:'desc'},
     {id:'s',    label:'Perse',        get:p => p.s,                                      dir:'desc'},
     {id:'pct',  label:'% vittorie',   get:p => Math.round(pct(p) * 100),                 dir:'desc'},
+    {id:'sw',   label:'Set vinti',    get:p => p.sw,                                    dir:'desc'},
+    {id:'sl',   label:'Set persi',    get:p => p.sl,                                    dir:'desc'},
     {id:'diff', label:'Diff. giochi', get:p => diff(p),                                  dir:'desc'},
     {id:'form', label:'Forma',        get:p => p.form.slice(-5).filter(Boolean).length,  dir:'desc', hint:'vittorie nelle ultime 5'}
   ];
   let sortCol = 'pct', sortDir = 'desc', flt = {}, openPanel = '';
   let cols = new Set(COLS.map(c => c.id));
   try {
-    const sv = JSON.parse(localStorage.getItem('padel-colonne') || 'null');
+    const sv = JSON.parse(localStorage.getItem('padel-colonne-v2') || 'null');
     if(Array.isArray(sv)) cols = new Set(sv.filter(id => COLS.some(c => c.id === id)).concat('name'));
   } catch(_){}
 
@@ -450,15 +485,6 @@ input[type=number]{text-align:center; padding-inline:4px}
       const r = col.text ? String(x).localeCompare(String(y), 'it') : x - y;
       return r * m || a.rank - b.rank;
     });
-  }
-
-  function renderFigs(){
-    const last = A.rows.length ? fmtDate(A.rows[0].data) : '–';
-    $('#figs').innerHTML =
-      `<div class="fig"><span>Partite</span><b>${A.count}</b></div>` +
-      `<div class="fig"><span>Giocatori</span><b>${A.players.length}</b></div>` +
-      `<div class="fig"><span>Set giocati</span><b>${A.sets}</b></div>` +
-      `<div class="fig"><span>Ultima partita</span><b>${esc(last)}</b></div>`;
   }
 
   function renderBoard(){
@@ -511,10 +537,12 @@ input[type=number]{text-align:center; padding-inline:4px}
     }).join('');
     const cell = {
       pos:  p => `<td class="rank">${p.rank}</td>`,
-      name: p => `<td class="name l">${esc(p.name)}</td>`,
+      name: p => `<td class="name l"><span class="rk">${p.rank}</span>${esc(p.name)}</td>`,
       pg:   p => `<td>${p.pg}</td>`,
       v:    p => `<td>${p.v}</td>`,
       s:    p => `<td>${p.s}</td>`,
+      sw:   p => `<td>${p.sw}</td>`,
+      sl:   p => `<td>${p.sl}</td>`,
       pct:  p => `<td>${pctCell(p)}</td>`,
       diff: p => `<td class="${diff(p) > 0 ? 'pos' : ''}">${fmtDiff(diff(p))}</td>`,
       form: p => `<td><span class="form5" aria-label="Ultime partite">${p.form.slice(-5).map(w => w ? '<span class="w" title="Vinta">V</span>' : '<span class="s" title="Persa">S</span>').join('')}</span></td>`
@@ -615,7 +643,7 @@ input[type=number]{text-align:center; padding-inline:4px}
   }
   function renderAll(){
     if(!A) return;
-    renderFmtbar(); renderFigs(); renderBoard(); renderResults(); renderPairs(); renderTrend();
+    renderFmtbar(); renderBoard(); renderResults(); renderPairs(); renderTrend();
     $('#plist').innerHTML = A.players.map(p => `<option value="${esc(p.name)}"></option>`).join('');
   }
 
@@ -636,6 +664,10 @@ input[type=number]{text-align:center; padding-inline:4px}
     else if(t.dataset.act === 'reset-flt'){ flt = {}; renderBoardControls(); renderBoardTable(); }
     else if(t.dataset.fmt !== undefined){ fmtFilter = t.dataset.fmt; showAll = false; reanalyze(); }
     else if(t.dataset.addfmt){ setAddFmt(t.dataset.addfmt); }
+    else if(t.dataset.act === 'install'){
+      if(deferredInstall){ deferredInstall.prompt(); deferredInstall.userChoice.then(() => { deferredInstall = null; $('#install').hidden = true; }, () => {}); }
+    }
+    else if(t.dataset.act === 'hide-install'){ $('#install').hidden = true; try { localStorage.setItem('padel-install-chiuso', '1'); } catch(_){} }
   });
   $('#filter').addEventListener('change', e => { filter = e.target.value; showAll = false; renderResults(); });
   document.addEventListener('change', e => {
@@ -644,7 +676,7 @@ input[type=number]{text-align:center; padding-inline:4px}
     if(e.target.checked) cols.add(id); else { cols.delete(id); delete flt[id]; }
     cols.add('name');
     if(!cols.has(sortCol)){ sortCol = cols.has('pct') ? 'pct' : 'name'; sortDir = sortCol === 'pct' ? 'desc' : 'asc'; }
-    try { localStorage.setItem('padel-colonne', JSON.stringify([...cols])); } catch(_){}
+    try { localStorage.setItem('padel-colonne-v2', JSON.stringify([...cols])); } catch(_){}
     renderBoardControls(); renderBoardTable();
   });
   document.addEventListener('input', e => {
@@ -706,6 +738,21 @@ input[type=number]{text-align:center; padding-inline:4px}
     $('#out').hidden = true; status('');
   }
 
+  // installazione come app (Android e computer: pulsante; iPhone e iPad: istruzioni)
+  let deferredInstall = null;
+  const isStandalone = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
+  const installDismissed = () => { try { return localStorage.getItem('padel-install-chiuso') === '1'; } catch(_){ return false; } };
+  const showInstall = html => { const el = $('#install'); el.innerHTML = html; el.hidden = false; };
+  window.addEventListener('beforeinstallprompt', e => {
+    e.preventDefault(); deferredInstall = e;
+    if(!isStandalone && !installDismissed()) showInstall('<p><b>Installa l’app.</b> La apri dalla schermata Home e funziona anche senza connessione.</p><div class="acts"><button class="btn small" data-act="install" type="button">Installa</button><button class="btn ghost small" data-act="hide-install" type="button">Non ora</button></div>');
+  });
+  const ua = navigator.userAgent || '';
+  const isIOS = /iphone|ipad|ipod/i.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  if(isIOS && !isStandalone && !installDismissed()){
+    showInstall('<p><b>Installa l’app su iPhone o iPad.</b> In Safari tocca Condividi, poi “Aggiungi alla schermata Home”.</p><div class="acts"><button class="btn ghost small" data-act="hide-install" type="button">Ho capito</button></div>');
+  }
+
   // navigazione tra schermate
   const SCREENS = ['classifica', 'risultati', 'coppie', 'andamento', 'aggiungi'];
   let current = 'classifica';
@@ -752,9 +799,14 @@ input[type=number]{text-align:center; padding-inline:4px}
     })
     .catch(() => {
       const n = $('#notice');
-      n.textContent = 'Non riesco a leggere partite.json. Apri il sito dal link di GitHub Pages: aprendo il file direttamente dal computer il browser blocca la lettura.';
+      n.textContent = 'Non riesco a leggere partite.json. Controlla la connessione. Se hai aperto il file direttamente dal computer, il browser blocca la lettura: usa il link di GitHub Pages.';
       n.hidden = false;
     });
+
+  // service worker: dati e pagina disponibili anche senza connessione
+  if('serviceWorker' in navigator && location.protocol.indexOf('http') === 0){
+    window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(() => {}); });
+  }
 })();
 </script>
 </body>
