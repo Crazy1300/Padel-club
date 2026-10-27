@@ -182,6 +182,13 @@ input[type=number]{text-align:center; padding-inline:4px}
 .sortbtn.on{color:var(--accent-ink); font-weight:600}
 .sortbtn .arr{font-size:10px; opacity:.75}
 
+/* formato partite */
+.fmtbar{display:flex; flex-wrap:wrap; gap:8px 12px; align-items:center; margin-top:-12px}
+.fmtbar > span{font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:var(--ink2)}
+.fmtbar .seg{flex-wrap:wrap}
+.fm{margin-left:10px; padding:1px 8px; border:1px solid var(--line); border-radius:999px; font-size:11px; letter-spacing:.04em; text-transform:none; color:var(--ink2); white-space:nowrap}
+.panel #addFmt{align-self:flex-start; flex-wrap:wrap}
+
 /* navigazione: barra in alto su schermi larghi, barra in basso su telefono */
 .blk[data-screen]{display:none}
 .blk[data-screen].on{display:flex}
@@ -221,6 +228,8 @@ input[type=number]{text-align:center; padding-inline:4px}
     <a href="#andamento" data-go="andamento"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 20h18M4 16l5-5 4 3 7-8"/></svg><span>Andamento</span></a>
     <a href="#aggiungi" data-go="aggiungi"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>Aggiungi</span></a>
   </nav>
+
+  <div class="fmtbar" id="fmtbar"></div>
 
   <div class="notice" id="notice" hidden></div>
 
@@ -295,14 +304,15 @@ input[type=number]{text-align:center; padding-inline:4px}
             <label class="f" for="f-b2">Giocatore 2<input type="text" id="f-b2" list="plist" autocomplete="off" maxlength="30"></label>
           </fieldset>
           <fieldset>
-            <legend>Punteggio (giochi per set)</legend>
+            <legend>Formato e punteggio (giochi per set)</legend>
+            <div class="seg" role="group" aria-label="Formato della partita" id="addFmt"><button type="button" data-addfmt="tre" aria-pressed="true">Al meglio dei 3</button><button type="button" data-addfmt="singolo" aria-pressed="false">Set singolo</button></div>
             <div class="sets">
               <span></span><span class="h">Coppia A</span><span class="h">Coppia B</span>
               <span class="lab">Set 1</span><input type="number" id="s1a" min="0" max="99" inputmode="numeric" aria-label="Set 1, coppia A"><input type="number" id="s1b" min="0" max="99" inputmode="numeric" aria-label="Set 1, coppia B">
               <span class="lab">Set 2</span><input type="number" id="s2a" min="0" max="99" inputmode="numeric" aria-label="Set 2, coppia A"><input type="number" id="s2b" min="0" max="99" inputmode="numeric" aria-label="Set 2, coppia B">
               <span class="lab">Set 3</span><input type="number" id="s3a" min="0" max="99" inputmode="numeric" aria-label="Set 3, coppia A"><input type="number" id="s3b" min="0" max="99" inputmode="numeric" aria-label="Set 3, coppia B">
             </div>
-            <p class="sub" style="font-size:13px">Il terzo set serve solo se i primi due finiscono 1 a 1.</p>
+            <p class="sub" id="setHint" style="font-size:13px">Vince chi si aggiudica 2 set. Il terzo si gioca solo se i primi due finiscono 1 a 1.</p>
           </fieldset>
         </div>
         <datalist id="plist"></datalist>
@@ -330,8 +340,14 @@ input[type=number]{text-align:center; padding-inline:4px}
   const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const clean = s => String(s == null ? '' : s).trim().replace(/\s+/g, ' ');
 
-  let matches = [], filter = '', sortKey = 'pct', showAll = false, A = null;
+  let matches = [], filter = '', fmtFilter = '', addFmt = 'tre', showAll = false, A = null;
 
+  // formato: "set-singolo" oppure "meglio-di-3"; se manca si deduce (1 set = singolo)
+  function fmtOf(m){
+    if(m && m.formato === 'set-singolo') return 'singolo';
+    if(m && m.formato === 'meglio-di-3') return 'tre';
+    return m && Array.isArray(m.set) && m.set.length === 1 ? 'singolo' : 'tre';
+  }
   function valid(m){
     if(!m || typeof m.data !== 'string' || !Array.isArray(m.a) || !Array.isArray(m.b) || m.a.length !== 2 || m.b.length !== 2) return false;
     if(!m.a.concat(m.b).every(n => typeof n === 'string' && clean(n))) return false;
@@ -341,7 +357,9 @@ input[type=number]{text-align:center; padding-inline:4px}
       if(!Array.isArray(s) || typeof s[0] !== 'number' || typeof s[1] !== 'number') return false;
       if(s[0] > s[1]) sa++; else if(s[1] > s[0]) sb++;
     }
-    return sa !== sb;
+    if(sa === sb || m.set.some(s => s[0] === s[1])) return false;
+    if(fmtOf(m) === 'singolo') return m.set.length === 1;
+    return m.set.length >= 2 && m.set.length <= 3 && Math.max(sa, sb) === 2;
   }
 
   function analyze(ms){
@@ -370,7 +388,7 @@ input[type=number]{text-align:center; padding-inline:4px}
       const W = aWin ? m.a : m.b, L = aWin ? m.b : m.a;
       rows.push({
         data:m.data, win:W.map(n => player(n).name), lose:L.map(n => player(n).name),
-        wSets:m.set.map(s => aWin ? s[0] : s[1]), lSets:m.set.map(s => aWin ? s[1] : s[0])
+        wSets:m.set.map(s => aWin ? s[0] : s[1]), lSets:m.set.map(s => aWin ? s[1] : s[0]), fmt:fmtOf(m)
       });
     }
     rows.reverse();
@@ -527,7 +545,7 @@ input[type=number]{text-align:center; padding-inline:4px}
       const line = (names, mine, theirs, win) =>
         `<div class="tm${win ? ' win' : ''}" style="--n:${n}"><span class="who">${esc(names.join(' · '))}</span>` +
         mine.map((g, i) => `<span class="g${g > theirs[i] ? ' won' : ''}">${g}</span>`).join('') + '</div>';
-      return `<article class="card"><div class="d"><span>${esc(fmtDate(r.data))}</span>${chip}</div>${line(r.win, r.wSets, r.lSets, true)}${line(r.lose, r.lSets, r.wSets, false)}</article>`;
+      return `<article class="card"><div class="d"><span>${esc(fmtDate(r.data))}<span class="fm">${r.fmt === 'singolo' ? 'Set singolo' : 'Al meglio dei 3'}</span></span>${chip}</div>${line(r.win, r.wSets, r.lSets, true)}${line(r.lose, r.lSets, r.wSets, false)}</article>`;
     }).join('');
     const more = rows.length > 6 ? `<button class="btn ghost small more" type="button" id="moreBtn">${showAll ? 'Mostra solo le ultime 6' : 'Mostra tutte (' + rows.length + ')'}</button>` : '';
     el.innerHTML = `<div class="cards">${cards}</div><div style="display:flex;justify-content:center;margin-top:14px">${more}</div>`;
@@ -584,9 +602,20 @@ input[type=number]{text-align:center; padding-inline:4px}
     hit.addEventListener('pointermove', at); hit.addEventListener('pointerdown', at); hit.addEventListener('pointerleave', out);
   }
 
+  function reanalyze(){
+    A = analyze(matches.filter(m => !fmtFilter || (valid(m) && fmtOf(m) === fmtFilter)));
+    renderAll();
+  }
+  function renderFmtbar(){
+    const v = matches.filter(valid);
+    const n = {'':v.length, tre:v.filter(m => fmtOf(m) === 'tre').length, singolo:v.filter(m => fmtOf(m) === 'singolo').length};
+    const opts = [['', 'Tutte'], ['tre', 'Al meglio dei 3'], ['singolo', 'Set singolo']];
+    $('#fmtbar').innerHTML = '<span>Partite</span><div class="seg" role="group" aria-label="Formato delle partite">' +
+      opts.map(o => `<button type="button" data-fmt="${o[0]}" aria-pressed="${fmtFilter === o[0]}">${o[1]} (${n[o[0]]})</button>`).join('') + '</div>';
+  }
   function renderAll(){
     if(!A) return;
-    renderFigs(); renderBoard(); renderResults(); renderPairs(); renderTrend();
+    renderFmtbar(); renderFigs(); renderBoard(); renderResults(); renderPairs(); renderTrend();
     $('#plist').innerHTML = A.players.map(p => `<option value="${esc(p.name)}"></option>`).join('');
   }
 
@@ -605,6 +634,8 @@ input[type=number]{text-align:center; padding-inline:4px}
       renderBoardControls();
     }
     else if(t.dataset.act === 'reset-flt'){ flt = {}; renderBoardControls(); renderBoardTable(); }
+    else if(t.dataset.fmt !== undefined){ fmtFilter = t.dataset.fmt; showAll = false; reanalyze(); }
+    else if(t.dataset.addfmt){ setAddFmt(t.dataset.addfmt); }
   });
   $('#filter').addEventListener('change', e => { filter = e.target.value; showAll = false; renderResults(); });
   document.addEventListener('change', e => {
@@ -644,10 +675,13 @@ input[type=number]{text-align:center; padding-inline:4px}
       sets.push([nx, ny]);
     }
     if(!sets.length) return status('Inserisci almeno il primo set.', true);
-    const sa = sets.filter(s => s[0] > s[1]).length;
-    if(sa * 2 === sets.length) return status('I set sono 1 a 1: aggiungi il set decisivo.', true);
+    const sa = sets.filter(s => s[0] > s[1]).length, sb = sets.length - sa;
+    if(addFmt === 'tre'){
+      if(sets.length < 2) return status('Al meglio dei 3 servono almeno due set. Per una partita a un solo set scegli “Set singolo”.', true);
+      if(sa === sb) return status('I set sono 1 a 1: aggiungi il set decisivo.', true);
+    }
     status('');
-    const row = `{"data": "${date}", "a": ${JSON.stringify([names[0], names[1]])}, "b": ${JSON.stringify([names[2], names[3]])}, "set": ${JSON.stringify(sets)}}`;
+    const row = `{"data": "${date}", "formato": "${addFmt === 'singolo' ? 'set-singolo' : 'meglio-di-3'}", "a": ${JSON.stringify([names[0], names[1]])}, "b": ${JSON.stringify([names[2], names[3]])}, "set": ${JSON.stringify(sets)}}`;
     $('#snippet').textContent = row;
     $('#copied').textContent = '';
     $('#out').hidden = false;
@@ -658,12 +692,27 @@ input[type=number]{text-align:center; padding-inline:4px}
     try { navigator.clipboard.writeText(txt).then(() => { ok.textContent = 'Copiata.'; }, fallback); } catch(_){ fallback(); }
   });
 
+  function setAddFmt(f){
+    addFmt = f;
+    document.querySelectorAll('#addFmt button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.addfmt === f)));
+    ['2', '3'].forEach(n => {
+      const a = $('#s' + n + 'a'), b = $('#s' + n + 'b');
+      [a.previousElementSibling, a, b].forEach(el => { el.hidden = f === 'singolo'; });
+      if(f === 'singolo'){ a.value = ''; b.value = ''; }
+    });
+    $('#setHint').textContent = f === 'singolo'
+      ? 'Un solo set: chi lo vince vince la partita e conta come vittoria o sconfitta.'
+      : 'Vince chi si aggiudica 2 set. Il terzo si gioca solo se i primi due finiscono 1 a 1.';
+    $('#out').hidden = true; status('');
+  }
+
   // navigazione tra schermate
   const SCREENS = ['classifica', 'risultati', 'coppie', 'andamento', 'aggiungi'];
   let current = 'classifica';
   function go(name){
     if(!SCREENS.includes(name)) name = 'classifica';
     current = name;
+    $('#fmtbar').hidden = name === 'aggiungi';
     document.querySelectorAll('.blk[data-screen]').forEach(s => s.classList.toggle('on', s.dataset.screen === name));
     document.querySelectorAll('#tabs a').forEach(a => {
       if(a.dataset.go === name) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
@@ -695,10 +744,11 @@ input[type=number]{text-align:center; padding-inline:4px}
     .then(r => { if(!r.ok) throw new Error(r.status); return r.json(); })
     .then(j => {
       matches = Array.isArray(j.partite) ? j.partite : [];
-      A = analyze(matches); renderAll();
+      reanalyze();
       const n = $('#notice');
       if(j.esempio === true){ n.innerHTML = '<b>Dati di esempio.</b> Per usare le vostre partite sostituisci il contenuto di <code>partite.json</code> e togli la riga <code>"esempio": true</code>.'; n.hidden = false; }
       else if(!A.count){ n.textContent = 'Nessuna partita valida in partite.json. Aggiungi la prima dalla scheda “Aggiungi”.'; n.hidden = false; }
+      else if(matches.length > A.count){ n.textContent = (matches.length - A.count) + ' partite di partite.json non sono valide e vengono ignorate. Controlla punteggi e formato.'; n.hidden = false; }
     })
     .catch(() => {
       const n = $('#notice');
