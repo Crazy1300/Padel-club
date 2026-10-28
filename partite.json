@@ -1,8 +1,15 @@
 {
   "esempio": true,
   "partite": [
-    {"data": "2026-10-28", "formato": "meglio-di-3", "a": ["Aniello", "Nicola"], "b": ["Yuri", "Jesus"], "set": [[3, 6], [7, 5], [2, 6]]},
-    {"data": "2026-10-28", "formato": "set-singolo", "a": ["Nicola", "Yuri"], "b": ["Aniello", "Jesus"], "set": [[6, 0]]},
-    {"data": "2026-10-28", "formato": "set-singolo", "a": ["Aniello", "Yuri"], "b": ["Jesus", "Nicola"], "set": [[2, 6]]},
+    {"data": "2026-09-07", "formato": "meglio-di-3", "a": ["Marco", "Luca"], "b": ["Giulia", "Sara"], "set": [[6, 4], [6, 3]]},
+    {"data": "2026-09-14", "formato": "meglio-di-3", "a": ["Marco", "Giulia"], "b": ["Luca", "Paolo"], "set": [[4, 6], [6, 3], [6, 4]]},
+    {"data": "2026-09-21", "formato": "meglio-di-3", "a": ["Sara", "Paolo"], "b": ["Marco", "Luca"], "set": [[3, 6], [2, 6]]},
+    {"data": "2026-09-28", "formato": "meglio-di-3", "a": ["Giulia", "Luca"], "b": ["Marco", "Sara"], "set": [[7, 5], [6, 7], [6, 3]]},
+    {"data": "2026-10-05", "formato": "meglio-di-3", "a": ["Marco", "Paolo"], "b": ["Giulia", "Sara"], "set": [[6, 2], [6, 4]]},
+    {"data": "2026-10-12", "formato": "meglio-di-3", "a": ["Luca", "Sara"], "b": ["Marco", "Giulia"], "set": [[6, 4], [3, 6], [4, 6]]},
+    {"data": "2026-10-19", "formato": "meglio-di-3", "a": ["Marco", "Luca"], "b": ["Giulia", "Paolo"], "set": [[6, 3], [7, 6]]},
+    {"data": "2026-10-22", "formato": "meglio-di-3", "a": ["Sara", "Giulia"], "b": ["Paolo", "Luca"], "set": [[6, 4], [6, 4]]},
+    {"data": "2026-10-24", "formato": "set-singolo", "a": ["Marco", "Sara"], "b": ["Luca", "Paolo"], "set": [[6, 3]]},
+    {"data": "2026-10-26", "formato": "set-singolo", "a": ["Giulia", "Paolo"], "b": ["Marco", "Luca"], "set": [[4, 6]]}
   ]
 }
