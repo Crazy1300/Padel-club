@@ -2,7 +2,7 @@
   "esempio": true,
   "partite": [
     {"data": "2026-09-07", "formato": "meglio-di-3", "a": ["Marco", "Luca"], "b": ["Giulia", "Sara"], "set": [[6, 4], [6, 3]]},
-    {"data": "2026-09-14", "formato": "meglio-di-3", "a": ["Marco", "Giulia"], "b": ["Luca", "Paolo"], "set": [[4, 6], [6, 3], [6, 4]]},
+    {"data": "2026-09-07", "formato": "meglio-di-3", "a": ["Marco", "Giulia"], "b": ["Luca", "Paolo"], "set": [[4, 6], [6, 3], [6, 4]]},
     {"data": "2026-09-21", "formato": "meglio-di-3", "a": ["Sara", "Paolo"], "b": ["Marco", "Luca"], "set": [[3, 6], [2, 6]]},
     {"data": "2026-09-28", "formato": "meglio-di-3", "a": ["Giulia", "Luca"], "b": ["Marco", "Sara"], "set": [[7, 5], [6, 7], [6, 3]]},
     {"data": "2026-10-05", "formato": "meglio-di-3", "a": ["Marco", "Paolo"], "b": ["Giulia", "Sara"], "set": [[6, 2], [6, 4]]},
