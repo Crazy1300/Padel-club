@@ -2,7 +2,7 @@
   "esempio": true,
   "partite": [
     {"data": "2026-10-28", "formato": "meglio-di-3", "a": ["Aniello", "Nicola"], "b": ["Yuri", "Jesus"], "set": [[3, 6], [7, 5], [2, 6]]},
-    {"data": "2026-10-29", "formato": "set-singolo", "a": ["Nicola", "Yuri"], "b": ["Aniello", "Jesus"], "set": [[6, 0]]},
-    {"data": "2026-10-30", "formato": "set-singolo", "a": ["Aniello", "Yuri"], "b": ["Jesus", "Nicola"], "set": [[2, 6]]},
+    {"data": "2026-10-28", "formato": "set-singolo", "a": ["Nicola", "Yuri"], "b": ["Aniello", "Jesus"], "set": [[6, 0]]},
+    {"data": "2026-10-28", "formato": "set-singolo", "a": ["Aniello", "Yuri"], "b": ["Jesus", "Nicola"], "set": [[2, 6]]},
   ]
 }
