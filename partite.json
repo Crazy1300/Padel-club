@@ -3,6 +3,6 @@
   "partite": [
     {"data": "2026-10-28", "formato": "meglio-di-3", "a": ["Aniello", "Nicola"], "b": ["Jesus", "Yuri"], "set": [[6, 3], [5, 7],[2, 6]]},
     {"data": "2026-10-28", "formato": "set-singolo", "a": ["Aniello", "Jesus"], "b": ["Yuri", "Nicola"], "set": [[0, 6]]},
-    {"data": "2026-10-28", "formato": "set-singolo", "a": ["Jesus", "Nicola"], "b": ["Aniello", "Yuri"], "set": [[2, 6]]}
+    {"data": "2026-10-28", "formato": "set-singolo", "a": ["Jesus", "Nicola"], "b": ["Aniello", "Yuri"], "set": [[6, 2]]}
   ]
 }
