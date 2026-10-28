@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Padel Stats &amp; Rankings</title>
-<meta name="description" content="Classifica, risultati e statistiche delle nostre partite di padel.">
+<meta name="description" content="Classifica e risultati delle partite di padel">
 <meta name="theme-color" content="#f4f6f9" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0d0f12" media="(prefers-color-scheme: dark)">
 <meta name="mobile-web-app-capable" content="yes">
@@ -16,14 +16,13 @@
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@600;700&display=swap">
 <style>
-/* Layout: una colonna. Intestazione, cifre chiave, podio + classifica, risultati a schede, coppie, andamento, aggiunta partita. */
+/* Layout: una colonna. Intestazione, menu, podio + classifica, risultati a schede, coppie. */
 :root{
   color-scheme:light;
   --bg:#f4f6f9; --surface:#ffffff; --ink:#0f1722; --ink2:#4a5565;
   --line:#dfe4ec; --track:#e6eaf1;
   --accent:#2a78d6; --accent-ink:#1c5cab; --on-accent:#ffffff; --accent-soft:#e3eefb;
-  --tint2:#b7d3f6; --tint3:#d6e6fa; --err:#b3261e;
-  --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a; --s4:#eda100; --s5:#e87ba4; --s6:#008300;
+  --err:#b3261e; --gold:#e8b923; --silver:#c5cbd4; --bronze:#d08b4e; --medal-ink:#14110a;
   --display:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
   --body:"Barlow",system-ui,-apple-system,"Segoe UI",sans-serif;
 }
@@ -33,8 +32,7 @@
     --bg:#0d0f12; --surface:#171a1f; --ink:#eef1f5; --ink2:#b4bcc9;
     --line:#262b33; --track:#262b33;
     --accent:#3987e5; --accent-ink:#6da7ec; --on-accent:#0b0b0b; --accent-soft:#16283f;
-    --tint2:#1c5cab; --tint3:#184f95; --err:#ff8f86;
-    --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500; --s5:#d55181; --s6:#008300;
+    --err:#ff8f86; --gold:#d9a81e; --silver:#aeb5c0; --bronze:#b9743a; --medal-ink:#14110a;
   }
 }
 :root[data-theme="dark"]{
@@ -42,8 +40,7 @@
   --bg:#0d0f12; --surface:#171a1f; --ink:#eef1f5; --ink2:#b4bcc9;
   --line:#262b33; --track:#262b33;
   --accent:#3987e5; --accent-ink:#6da7ec; --on-accent:#0b0b0b; --accent-soft:#16283f;
-  --tint2:#1c5cab; --tint3:#184f95; --err:#ff8f86;
-  --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500; --s5:#d55181; --s6:#008300;
+  --err:#ff8f86; --gold:#d9a81e; --silver:#aeb5c0; --bronze:#b9743a; --medal-ink:#14110a;
 }
 *{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%}
@@ -100,11 +97,12 @@ section.blk{display:flex; flex-direction:column; gap:16px; min-width:0}
 .pod .nm{font-weight:600; font-size:17px; max-width:100%; overflow-wrap:anywhere}
 .pod .st{font-size:13px; color:var(--ink2); font-variant-numeric:tabular-nums}
 .pod .blk2{width:100%; border-radius:8px 8px 0 0; display:flex; flex-direction:column; align-items:center; justify-content:flex-start; padding-top:10px; margin-top:8px}
+.pod .blk2{color:var(--medal-ink); box-shadow:inset 0 3px 0 rgba(255,255,255,.38)}
 .pod .n{font-family:var(--display); font-weight:700; font-size:44px; line-height:1}
 .pod .pc{font-family:var(--display); font-weight:600; font-size:20px; font-variant-numeric:tabular-nums}
-.pod.p1 .blk2{height:150px; background:var(--accent); color:var(--on-accent)}
-.pod.p2 .blk2{height:110px; background:var(--tint2); color:var(--ink)}
-.pod.p3 .blk2{height:84px; background:var(--tint3); color:var(--ink)}
+.pod.p1 .blk2{height:150px; background:var(--gold)}
+.pod.p2 .blk2{height:110px; background:var(--silver)}
+.pod.p3 .blk2{height:84px; background:var(--bronze)}
 
 /* tabelle */
 .tw{overflow-x:auto}
@@ -145,41 +143,10 @@ tr.lead td.rank{color:var(--accent-ink); font-size:20px; font-weight:700}
 .chip.s{border:1px solid var(--ink2); color:var(--ink2)}
 .more{align-self:center}
 
-/* grafico */
-.legend{display:flex; flex-wrap:wrap; gap:6px 18px; font-size:14px}
-.legend span{display:inline-flex; align-items:center; gap:7px}
-.legend i{width:11px; height:11px; border-radius:3px; display:inline-block}
-.chartbox{position:relative}
-.chartbox svg{width:100%; height:auto; display:block; touch-action:pan-y}
-.ax{fill:var(--ink2); font-size:11px; font-family:var(--body)}
-.gl{stroke:var(--line); stroke-width:1}
-.axl{stroke:var(--ink2); stroke-width:1; opacity:.5}
-.ln{fill:none; stroke-width:2; stroke-linejoin:round; stroke-linecap:round}
-.dot{stroke:var(--bg); stroke-width:2}
-.cross{stroke:var(--ink2); stroke-width:1; stroke-dasharray:3 3}
-.tip{position:absolute; top:0; pointer-events:none; background:var(--surface); border:1px solid var(--line); border-radius:8px; padding:8px 10px; font-size:13px; box-shadow:0 4px 14px rgba(0,0,0,.12); min-width:140px; z-index:2}
-.tip b{display:block; margin-bottom:4px}
-.tip div{display:flex; align-items:center; gap:7px; font-variant-numeric:tabular-nums}
-.tip i{width:9px; height:9px; border-radius:2px; display:inline-block; flex:none}
-.tip em{margin-left:auto; font-style:normal; font-weight:600; padding-left:12px}
-
-/* aggiunta partita */
-.panel{background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:22px}
-.formgrid{display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:20px 28px; margin-top:16px}
-fieldset{border:0; padding:0; margin:0; min-width:0; display:flex; flex-direction:column; gap:10px}
-legend{padding:0; margin-bottom:8px; font-weight:600}
+/* campi dei filtri */
 label.f{display:flex; flex-direction:column; gap:4px; font-size:13px; color:var(--ink2); min-width:0}
 input[type=text],input[type=date],input[type=number],select{background:var(--bg); border:1px solid var(--line); border-radius:8px; padding:9px 11px; min-height:42px; width:100%; min-width:0}
 input[type=number]{text-align:center; padding-inline:4px}
-.sets{display:grid; grid-template-columns:auto 1fr 1fr; gap:8px 12px; align-items:center}
-.sets .h{font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink2)}
-.sets .lab{font-size:13px; color:var(--ink2)}
-.formfoot{display:flex; flex-wrap:wrap; gap:12px 16px; align-items:center; margin-top:20px}
-.status{font-size:14px; min-height:1.4em}
-.status.err{color:var(--err)}
-.out{margin-top:16px; display:flex; flex-direction:column; gap:10px}
-.out pre{margin:0; padding:12px 14px; background:var(--bg); border:1px solid var(--line); border-radius:8px; overflow-x:auto; font-size:13px; line-height:1.5}
-.out ol{margin:0; padding-left:20px; color:var(--ink2); display:flex; flex-direction:column; gap:4px}
 /* personalizzazione classifica */
 .tools{display:flex; gap:8px; flex-wrap:wrap}
 .panel2{background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:16px 18px}
@@ -203,7 +170,6 @@ input[type=number]{text-align:center; padding-inline:4px}
 .fmtbar > span{font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:var(--ink2)}
 .fmtbar .seg{flex-wrap:wrap}
 .fm{margin-left:10px; padding:1px 8px; border:1px solid var(--line); border-radius:999px; font-size:11px; letter-spacing:.04em; text-transform:none; color:var(--ink2); white-space:nowrap}
-.panel #addFmt{align-self:flex-start; flex-wrap:wrap}
 
 /* navigazione: barra in alto su schermi larghi, barra in basso su telefono */
 .blk[data-screen]{display:none}
@@ -257,8 +223,6 @@ input[type=number]{text-align:center; padding-inline:4px}
     <a href="#classifica" data-go="classifica"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 20v-8h5v8M9 20V5h6v15M16 20v-6h5v6"/></svg><span>Classifica</span></a>
     <a href="#risultati" data-go="risultati"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"/></svg><span>Risultati</span></a>
     <a href="#coppie" data-go="coppie"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M3 20c0-3.5 2.7-6 6-6s6 2.5 6 6M15 14.5c3 0 6 1.5 6 5.5"/></svg><span>Coppie</span></a>
-    <a href="#andamento" data-go="andamento"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 20h18M4 16l5-5 4 3 7-8"/></svg><span>Andamento</span></a>
-    <a href="#aggiungi" data-go="aggiungi"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>Aggiungi</span></a>
   </nav>
 
   <div class="fmtbar" id="fmtbar"></div>
@@ -305,66 +269,6 @@ input[type=number]{text-align:center; padding-inline:4px}
     </div>
     <div id="pairs"></div>
   </section>
-
-  <section class="blk" data-screen="andamento" aria-labelledby="h-trend">
-    <div>
-      <h2 id="h-trend">Andamento</h2>
-      <p class="sub">Vittorie accumulate partita dopo partita, per i giocatori che hanno giocato di più.</p>
-    </div>
-    <div class="legend" id="legend"></div>
-    <div class="chartbox" id="trend"></div>
-  </section>
-
-  <section class="blk" data-screen="aggiungi" aria-labelledby="h-add">
-    <div>
-      <h2 id="h-add">Aggiungi una partita</h2>
-      <p class="sub">Compila il modulo, copia la riga che ti restituisce e incollala in <code>partite.json</code> su GitHub.</p>
-    </div>
-    <div class="panel">
-      <form id="addForm" novalidate>
-        <div class="formgrid">
-          <div style="display:flex;flex-direction:column;gap:20px;min-width:0">
-            <label class="f" for="f-date">Data<input type="date" id="f-date"></label>
-            <fieldset>
-              <legend>Coppia A</legend>
-              <label class="f" for="f-a1">Giocatore 1<input type="text" id="f-a1" list="plist" autocomplete="off" maxlength="30"></label>
-              <label class="f" for="f-a2">Giocatore 2<input type="text" id="f-a2" list="plist" autocomplete="off" maxlength="30"></label>
-            </fieldset>
-          </div>
-          <fieldset>
-            <legend>Coppia B</legend>
-            <label class="f" for="f-b1">Giocatore 1<input type="text" id="f-b1" list="plist" autocomplete="off" maxlength="30"></label>
-            <label class="f" for="f-b2">Giocatore 2<input type="text" id="f-b2" list="plist" autocomplete="off" maxlength="30"></label>
-          </fieldset>
-          <fieldset>
-            <legend>Formato e punteggio (giochi per set)</legend>
-            <div class="seg" role="group" aria-label="Formato della partita" id="addFmt"><button type="button" data-addfmt="tre" aria-pressed="true">Al meglio dei 3</button><button type="button" data-addfmt="singolo" aria-pressed="false">Set singolo</button></div>
-            <div class="sets">
-              <span></span><span class="h">Coppia A</span><span class="h">Coppia B</span>
-              <span class="lab">Set 1</span><input type="number" id="s1a" min="0" max="99" inputmode="numeric" aria-label="Set 1, coppia A"><input type="number" id="s1b" min="0" max="99" inputmode="numeric" aria-label="Set 1, coppia B">
-              <span class="lab">Set 2</span><input type="number" id="s2a" min="0" max="99" inputmode="numeric" aria-label="Set 2, coppia A"><input type="number" id="s2b" min="0" max="99" inputmode="numeric" aria-label="Set 2, coppia B">
-              <span class="lab">Set 3</span><input type="number" id="s3a" min="0" max="99" inputmode="numeric" aria-label="Set 3, coppia A"><input type="number" id="s3b" min="0" max="99" inputmode="numeric" aria-label="Set 3, coppia B">
-            </div>
-            <p class="sub" id="setHint" style="font-size:13px">Vince chi si aggiudica 2 set. Il terzo si gioca solo se i primi due finiscono 1 a 1.</p>
-          </fieldset>
-        </div>
-        <datalist id="plist"></datalist>
-        <div class="formfoot">
-          <button class="btn" type="submit">Crea la riga</button>
-          <p class="status" id="status" role="status" aria-live="polite"></p>
-        </div>
-      </form>
-      <div class="out" id="out" hidden>
-        <pre id="snippet"></pre>
-        <div><button class="btn ghost small" type="button" id="copyBtn">Copia la riga</button> <span class="status" id="copied"></span></div>
-        <ol>
-          <li>Apri <code>partite.json</code> nel tuo repository su GitHub e premi l'icona della matita.</li>
-          <li>Incolla la riga dentro l'elenco <code>"partite"</code>, con una virgola dopo la riga precedente.</li>
-          <li>Premi “Commit changes”. Dopo un minuto circa il sito si aggiorna.</li>
-        </ol>
-      </div>
-    </div>
-  </section>
 </div>
 
 <script>
@@ -373,7 +277,7 @@ input[type=number]{text-align:center; padding-inline:4px}
   const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const clean = s => String(s == null ? '' : s).trim().replace(/\s+/g, ' ');
 
-  let matches = [], filter = '', fmtFilter = '', addFmt = 'tre', showAll = false, A = null;
+  let matches = [], filter = '', fmtFilter = '', showAll = false, A = null;
 
   // formato: "set-singolo" oppure "meglio-di-3"; se manca si deduce (1 set = singolo)
   function fmtOf(m){
@@ -397,7 +301,7 @@ input[type=number]{text-align:center; padding-inline:4px}
 
   function analyze(ms){
     const list = ms.filter(valid).map((m, i) => ({...m, _i:i})).sort((x, y) => x.data.localeCompare(y.data) || x._i - y._i);
-    const P = new Map(), C = new Map(), chron = [], rows = [];
+    const P = new Map(), C = new Map(), rows = [];
     let sets = 0;
     const player = n => {
       const k = clean(n).toLowerCase();
@@ -409,15 +313,13 @@ input[type=number]{text-align:center; padding-inline:4px}
       for(const s of m.set){ ga += s[0]; gb += s[1]; if(s[0] > s[1]) sa++; else sb++; }
       sets += m.set.length;
       const aWin = sa > sb;
-      const winKeys = [];
       for(const [t, win, gf, gc, sw, sl] of [[m.a, aWin, ga, gb, sa, sb], [m.b, !aWin, gb, ga, sb, sa]]){
         const ps = t.map(player);
-        for(const p of ps){ p.pg++; win ? p.v++ : p.s++; p.sw += sw; p.sl += sl; p.gw += gf; p.gl += gc; p.form.push(win); if(win) winKeys.push(p.key); }
+        for(const p of ps){ p.pg++; win ? p.v++ : p.s++; p.sw += sw; p.sl += sl; p.gw += gf; p.gl += gc; p.form.push(win); }
         const key = ps.map(p => p.key).sort().join('|');
         if(!C.has(key)) C.set(key, {names:ps.map(p => p.name).sort((x, y) => x.localeCompare(y, 'it')), pg:0, v:0, gw:0, gl:0});
         const c = C.get(key); c.pg++; if(win) c.v++; c.gw += gf; c.gl += gc;
       }
-      chron.push({data:m.data, winKeys});
       const W = aWin ? m.a : m.b, L = aWin ? m.b : m.a;
       rows.push({
         data:m.data, win:W.map(n => player(n).name), lose:L.map(n => player(n).name),
@@ -425,7 +327,7 @@ input[type=number]{text-align:center; padding-inline:4px}
       });
     }
     rows.reverse();
-    return {players:[...P.values()], pairs:[...C.values()], sets, rows, chron, count:list.length};
+    return {players:[...P.values()], pairs:[...C.values()], sets, rows, count:list.length};
   }
 
   const pct = o => o.pg ? o.v / o.pg : 0;
@@ -589,47 +491,6 @@ input[type=number]{text-align:center; padding-inline:4px}
     el.innerHTML = `<div class="tw"><table><thead><tr><th class="l" style="width:auto">Coppia</th><th>Giocate</th><th>Vinte</th><th>Perse</th><th>% vittorie</th><th>Diff. giochi</th></tr></thead><tbody>${body}</tbody></table></div>`;
   }
 
-  function renderTrend(){
-    const box = $('#trend'), N = A.chron.length;
-    if(N < 2){ box.innerHTML = '<p class="empty">Il grafico compare dalla seconda partita.</p>'; $('#legend').innerHTML = ''; return; }
-    const top = A.players.slice().sort((a, b) => b.pg - a.pg || b.v - a.v).slice(0, 6);
-    const cum = top.map(p => { let w = 0; return A.chron.map(m => (m.winKeys.includes(p.key) && w++, w)); });
-    const maxV = Math.max(1, ...cum.map(c => c[N - 1]));
-    const step = maxV <= 6 ? 1 : Math.ceil(maxV / 6);
-    const yMax = Math.ceil(maxV / step) * step;
-    const W = 720, H = 300, L = 38, R = 16, T = 12, B = 34, pw = W - L - R, ph = H - T - B;
-    const X = i => L + (N === 1 ? pw / 2 : i / (N - 1) * pw);
-    const Y = v => T + ph - v / yMax * ph;
-    let g = '';
-    for(let v = 0; v <= yMax; v += step) g += `<line class="${v === 0 ? 'axl' : 'gl'}" x1="${L}" x2="${W - R}" y1="${Y(v)}" y2="${Y(v)}"/><text class="ax" x="${L - 8}" y="${Y(v) + 4}" text-anchor="end">${v}</text>`;
-    const tickEvery = Math.max(1, Math.ceil(N / 8));
-    for(let i = 0; i < N; i++) if(i % tickEvery === 0 || i === N - 1) g += `<text class="ax" x="${X(i)}" y="${H - 12}" text-anchor="middle">${i + 1}</text>`;
-    g += `<text class="ax" x="${L + pw / 2}" y="${H - 0}" text-anchor="middle" style="font-size:10px;letter-spacing:.06em">PARTITA N.</text>`;
-    const lines = top.map((p, k) => `<polyline class="ln" style="stroke:var(--s${k + 1})" points="${cum[k].map((v, i) => X(i).toFixed(1) + ',' + Y(v).toFixed(1)).join(' ')}"/>`).join('');
-    const ends = top.map((p, k) => `<circle class="dot" style="fill:var(--s${k + 1})" cx="${X(N - 1)}" cy="${Y(cum[k][N - 1])}" r="4.5"/>`).join('');
-    const hov = top.map((p, k) => `<circle class="dot hv" style="fill:var(--s${k + 1})" r="5" cx="-20" cy="-20"/>`).join('');
-    box.innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Vittorie accumulate per giocatore, ${N} partite">${g}${lines}${ends}<line class="cross" id="cross" y1="${T}" y2="${T + ph}" x1="-10" x2="-10"/>${hov}<rect id="hit" x="${L}" y="${T}" width="${pw}" height="${ph}" fill="transparent"/></svg><div class="tip" id="tip" hidden></div>`;
-    $('#legend').innerHTML = top.map((p, k) => `<span><i style="background:var(--s${k + 1})"></i>${esc(p.name)}</span>`).join('');
-
-    const svg = box.querySelector('svg'), tip = $('#tip'), cross = $('#cross'), hvs = [...box.querySelectorAll('.hv')];
-    function at(ev){
-      const r = svg.getBoundingClientRect();
-      const x = (ev.clientX - r.left) / r.width * W;
-      const i = Math.max(0, Math.min(N - 1, Math.round((x - L) / pw * (N - 1))));
-      cross.setAttribute('x1', X(i)); cross.setAttribute('x2', X(i));
-      hvs.forEach((c, k) => { c.setAttribute('cx', X(i)); c.setAttribute('cy', Y(cum[k][i])); });
-      const rows = top.map((p, k) => ({p, k, v:cum[k][i]})).sort((a, b) => b.v - a.v)
-        .map(o => `<div><i style="background:var(--s${o.k + 1})"></i>${esc(o.p.name)}<em>${o.v}</em></div>`).join('');
-      tip.innerHTML = `<b>Partita ${i + 1}, ${esc(fmtDate(A.chron[i].data))}</b>${rows}`;
-      tip.hidden = false;
-      const px = X(i) / W * r.width, tw = tip.offsetWidth;
-      tip.style.left = Math.max(0, Math.min(r.width - tw, px + 14)) + 'px';
-    }
-    function out(){ tip.hidden = true; cross.setAttribute('x1', -10); cross.setAttribute('x2', -10); hvs.forEach(c => c.setAttribute('cx', -20)); }
-    const hit = $('#hit');
-    hit.addEventListener('pointermove', at); hit.addEventListener('pointerdown', at); hit.addEventListener('pointerleave', out);
-  }
-
   function reanalyze(){
     A = analyze(matches.filter(m => !fmtFilter || (valid(m) && fmtOf(m) === fmtFilter)));
     renderAll();
@@ -643,8 +504,7 @@ input[type=number]{text-align:center; padding-inline:4px}
   }
   function renderAll(){
     if(!A) return;
-    renderFmtbar(); renderBoard(); renderResults(); renderPairs(); renderTrend();
-    $('#plist').innerHTML = A.players.map(p => `<option value="${esc(p.name)}"></option>`).join('');
+    renderFmtbar(); renderBoard(); renderResults(); renderPairs();
   }
 
   // eventi
@@ -663,7 +523,6 @@ input[type=number]{text-align:center; padding-inline:4px}
     }
     else if(t.dataset.act === 'reset-flt'){ flt = {}; renderBoardControls(); renderBoardTable(); }
     else if(t.dataset.fmt !== undefined){ fmtFilter = t.dataset.fmt; showAll = false; reanalyze(); }
-    else if(t.dataset.addfmt){ setAddFmt(t.dataset.addfmt); }
     else if(t.dataset.act === 'install'){
       if(deferredInstall){ deferredInstall.prompt(); deferredInstall.userChoice.then(() => { deferredInstall = null; $('#install').hidden = true; }, () => {}); }
     }
@@ -686,58 +545,6 @@ input[type=number]{text-align:center; padding-inline:4px}
     renderBoardTable();
   });
 
-  const status = (m, err) => { const s = $('#status'); s.textContent = m; s.className = 'status' + (err ? ' err' : ''); };
-  $('#addForm').addEventListener('submit', e => {
-    e.preventDefault();
-    $('#out').hidden = true;
-    const date = $('#f-date').value;
-    const names = ['a1','a2','b1','b2'].map(k => clean($('#f-' + k).value));
-    if(!date) return status('Scegli la data della partita.', true);
-    if(names.some(n => !n)) return status('Inserisci i nomi di tutti e quattro i giocatori.', true);
-    if(new Set(names.map(n => n.toLowerCase())).size < 4) return status('Ogni giocatore può comparire una sola volta.', true);
-    const sets = []; let gap = false;
-    for(let i = 1; i <= 3; i++){
-      const x = $('#s' + i + 'a').value, y = $('#s' + i + 'b').value;
-      if(x === '' && y === ''){ gap = true; continue; }
-      if(x === '' || y === '') return status(`Completa i giochi di entrambe le coppie nel set ${i}.`, true);
-      if(gap) return status('Compila i set in ordine, senza saltarne uno.', true);
-      const nx = Number(x), ny = Number(y);
-      if(!Number.isInteger(nx) || !Number.isInteger(ny) || nx < 0 || ny < 0) return status('I giochi devono essere numeri interi.', true);
-      if(nx === ny) return status(`Il set ${i} non può finire in parità.`, true);
-      sets.push([nx, ny]);
-    }
-    if(!sets.length) return status('Inserisci almeno il primo set.', true);
-    const sa = sets.filter(s => s[0] > s[1]).length, sb = sets.length - sa;
-    if(addFmt === 'tre'){
-      if(sets.length < 2) return status('Al meglio dei 3 servono almeno due set. Per una partita a un solo set scegli “Set singolo”.', true);
-      if(sa === sb) return status('I set sono 1 a 1: aggiungi il set decisivo.', true);
-    }
-    status('');
-    const row = `{"data": "${date}", "formato": "${addFmt === 'singolo' ? 'set-singolo' : 'meglio-di-3'}", "a": ${JSON.stringify([names[0], names[1]])}, "b": ${JSON.stringify([names[2], names[3]])}, "set": ${JSON.stringify(sets)}}`;
-    $('#snippet').textContent = row;
-    $('#copied').textContent = '';
-    $('#out').hidden = false;
-  });
-  $('#copyBtn').addEventListener('click', () => {
-    const txt = $('#snippet').textContent, ok = $('#copied');
-    const fallback = () => { const r = document.createRange(); r.selectNodeContents($('#snippet')); const s = getSelection(); s.removeAllRanges(); s.addRange(r); ok.textContent = 'Riga selezionata: premi Copia dal tuo dispositivo.'; };
-    try { navigator.clipboard.writeText(txt).then(() => { ok.textContent = 'Copiata.'; }, fallback); } catch(_){ fallback(); }
-  });
-
-  function setAddFmt(f){
-    addFmt = f;
-    document.querySelectorAll('#addFmt button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.addfmt === f)));
-    ['2', '3'].forEach(n => {
-      const a = $('#s' + n + 'a'), b = $('#s' + n + 'b');
-      [a.previousElementSibling, a, b].forEach(el => { el.hidden = f === 'singolo'; });
-      if(f === 'singolo'){ a.value = ''; b.value = ''; }
-    });
-    $('#setHint').textContent = f === 'singolo'
-      ? 'Un solo set: chi lo vince vince la partita e conta come vittoria o sconfitta.'
-      : 'Vince chi si aggiudica 2 set. Il terzo si gioca solo se i primi due finiscono 1 a 1.';
-    $('#out').hidden = true; status('');
-  }
-
   // installazione come app (Android e computer: pulsante; iPhone e iPad: istruzioni)
   let deferredInstall = null;
   const isStandalone = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
@@ -754,12 +561,11 @@ input[type=number]{text-align:center; padding-inline:4px}
   }
 
   // navigazione tra schermate
-  const SCREENS = ['classifica', 'risultati', 'coppie', 'andamento', 'aggiungi'];
+  const SCREENS = ['classifica', 'risultati', 'coppie'];
   let current = 'classifica';
   function go(name){
     if(!SCREENS.includes(name)) name = 'classifica';
     current = name;
-    $('#fmtbar').hidden = name === 'aggiungi';
     document.querySelectorAll('.blk[data-screen]').forEach(s => s.classList.toggle('on', s.dataset.screen === name));
     document.querySelectorAll('#tabs a').forEach(a => {
       if(a.dataset.go === name) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
@@ -767,11 +573,11 @@ input[type=number]{text-align:center; padding-inline:4px}
   }
   window.addEventListener('hashchange', () => { go(location.hash.slice(1)); window.scrollTo(0, 0); });
   go(location.hash.slice(1));
-  // scorrimento con il dito: sinistra e destra cambiano schermata (non sopra tabelle, grafico e campi)
+  // scorrimento con il dito: sinistra e destra cambiano schermata (non sopra tabelle e campi)
   let sx = 0, sy = 0, swipeOk = false;
   document.addEventListener('touchstart', e => {
     const t = e.touches[0]; sx = t.clientX; sy = t.clientY;
-    swipeOk = e.touches.length === 1 && !e.target.closest('.tw, .chartbox, input, select, textarea, pre, nav');
+    swipeOk = e.touches.length === 1 && !e.target.closest('.tw, input, select, textarea, nav');
   }, {passive:true});
   document.addEventListener('touchend', e => {
     if(!swipeOk) return;
@@ -783,8 +589,6 @@ input[type=number]{text-align:center; padding-inline:4px}
   }, {passive:true});
 
   // avvio
-  const d = new Date(), z = n => String(n).padStart(2, '0');
-  $('#f-date').value = `${d.getFullYear()}-${z(d.getMonth() + 1)}-${z(d.getDate())}`;
   A = analyze([]); renderAll();
 
   fetch('partite.json', {cache:'no-store'})
@@ -794,7 +598,7 @@ input[type=number]{text-align:center; padding-inline:4px}
       reanalyze();
       const n = $('#notice');
       if(j.esempio === true){ n.innerHTML = '<b>Dati di esempio.</b> Per usare le vostre partite sostituisci il contenuto di <code>partite.json</code> e togli la riga <code>"esempio": true</code>.'; n.hidden = false; }
-      else if(!A.count){ n.textContent = 'Nessuna partita valida in partite.json. Aggiungi la prima dalla scheda “Aggiungi”.'; n.hidden = false; }
+      else if(!A.count){ n.textContent = 'Nessuna partita valida in partite.json. Aggiungi le partite modificando il file su GitHub.'; n.hidden = false; }
       else if(matches.length > A.count){ n.textContent = (matches.length - A.count) + ' partite di partite.json non sono valide e vengono ignorate. Controlla punteggi e formato.'; n.hidden = false; }
     })
     .catch(() => {
