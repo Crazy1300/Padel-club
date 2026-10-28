@@ -1,7 +1,7 @@
 {
   "name": "Padel Stats & Rankings",
   "short_name": "Padel Stats",
-  "description": "Classifica, risultati e statistiche delle nostre partite di padel.",
+  "description": "Classifica e risultati delle partite di padel.",
   "lang": "it",
   "start_url": "./",
   "scope": "./",
