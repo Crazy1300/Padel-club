@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Padel Stats &amp; Rankings</title>
-<meta name="description" content="Classifica e risultati delle partite di padel">
+<meta name="description" content="Classifica, risultati e statistiche delle nostre partite di padel.">
 <meta name="theme-color" content="#f4f6f9" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0d0f12" media="(prefers-color-scheme: dark)">
 <meta name="mobile-web-app-capable" content="yes">
@@ -149,6 +149,13 @@ input[type=text],input[type=date],input[type=number],select{background:var(--bg)
 input[type=number]{text-align:center; padding-inline:4px}
 /* personalizzazione classifica */
 .tools{display:flex; gap:8px; flex-wrap:wrap}
+.rules{background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:0 16px}
+.rules summary{cursor:pointer; min-height:44px; display:flex; align-items:center; font-weight:600}
+.rules-body{display:flex; flex-direction:column; gap:12px; padding-bottom:16px; color:var(--ink2)}
+.rules-body p{max-width:70ch}
+.pts{list-style:none; margin:0; padding:0; display:grid; grid-template-columns:repeat(auto-fit,minmax(250px,1fr)); gap:0 28px}
+.pts li{display:flex; justify-content:space-between; gap:12px; padding:7px 0; border-bottom:1px solid var(--line)}
+.pts b{color:var(--ink); font-variant-numeric:tabular-nums; white-space:nowrap}
 .panel2{background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:16px 18px}
 .chk{display:flex; flex-wrap:wrap; gap:6px 22px; align-items:center}
 .chk > b{font-weight:600; margin-right:6px}
@@ -235,7 +242,7 @@ input[type=number]{text-align:center; padding-inline:4px}
     <div class="sechead">
       <div>
         <h2 id="h-rank">Classifica</h2>
-        <p class="sub" id="rankSub">Parte dalla percentuale di vittorie più alta. Clicca sulle intestazioni per ordinare, usa Colonne e Filtri per personalizzare la tabella.</p>
+        <p class="sub" id="rankSub">Parte dai punti totali; a parità conta la percentuale di vittorie. Clicca sulle intestazioni per ordinare, usa Colonne e Filtri per personalizzare la tabella.</p>
       </div>
       <div class="tools">
         <button class="btn ghost small" type="button" id="btnCols" aria-expanded="false" aria-controls="colsPanel">Colonne</button>
@@ -247,6 +254,22 @@ input[type=number]{text-align:center; padding-inline:4px}
     <div class="panel2" id="fltPanel" hidden></div>
     <p class="sub count" id="boardCount" aria-live="polite"></p>
     <div id="board"></div>
+    <details class="rules">
+      <summary>Come funzionano punti ed ELO</summary>
+      <div class="rules-body">
+        <ul class="pts">
+          <li><span>Al meglio dei 3, vittoria 2-0</span><b>5 punti</b></li>
+          <li><span>Al meglio dei 3, vittoria 2-1</span><b>4 punti</b></li>
+          <li><span>Al meglio dei 3, sconfitta 1-2</span><b>2 punti</b></li>
+          <li><span>Al meglio dei 3, sconfitta 0-2</span><b>1 punto</b></li>
+          <li><span>Set singolo, vittoria 1-0</span><b>3 punti</b></li>
+          <li><span>Set singolo, sconfitta 0-1</span><b>1 punto</b></li>
+        </ul>
+        <p>I punti vanno a entrambi i giocatori della coppia e la colonna Punti è la somma di tutte le partite.</p>
+        <p>L'ELO parte da 1000 per tutti. Le partite si elaborano in ordine di data: dopo ognuna la coppia vincente guadagna punti ELO e quella perdente ne perde lo stesso numero. Vincere contro una coppia più forte vale di più, perdere contro una più debole costa di più. Conta solo vincere o perdere, non il punteggio. Al massimo una partita sposta 32 punti.</p>
+        <p>Se scegli un formato nel selettore "Partite", punti ed ELO sono calcolati solo sulle partite di quel formato.</p>
+      </div>
+    </details>
   </section>
 
   <section class="blk" data-screen="risultati" aria-labelledby="h-res">
@@ -276,6 +299,7 @@ input[type=number]{text-align:center; padding-inline:4px}
   const $ = s => document.querySelector(s);
   const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const clean = s => String(s == null ? '' : s).trim().replace(/\s+/g, ' ');
+  const ELO_START = 1000, ELO_K = 32; // ELO: tutti partono da 1000, una partita sposta al massimo 32 punti
 
   let matches = [], filter = '', fmtFilter = '', showAll = false, A = null;
 
@@ -305,7 +329,7 @@ input[type=number]{text-align:center; padding-inline:4px}
     let sets = 0;
     const player = n => {
       const k = clean(n).toLowerCase();
-      if(!P.has(k)) P.set(k, {key:k, name:clean(n), pg:0, v:0, s:0, sw:0, sl:0, gw:0, gl:0, form:[]});
+      if(!P.has(k)) P.set(k, {key:k, name:clean(n), pg:0, v:0, s:0, sw:0, sl:0, gw:0, gl:0, pt:0, elo:ELO_START, form:[]});
       return P.get(k);
     };
     for(const m of list){
@@ -313,13 +337,23 @@ input[type=number]{text-align:center; padding-inline:4px}
       for(const s of m.set){ ga += s[0]; gb += s[1]; if(s[0] > s[1]) sa++; else sb++; }
       sets += m.set.length;
       const aWin = sa > sb;
+      const tre = fmtOf(m) === 'tre';
       for(const [t, win, gf, gc, sw, sl] of [[m.a, aWin, ga, gb, sa, sb], [m.b, !aWin, gb, ga, sb, sa]]){
         const ps = t.map(player);
-        for(const p of ps){ p.pg++; win ? p.v++ : p.s++; p.sw += sw; p.sl += sl; p.gw += gf; p.gl += gc; p.form.push(win); }
+        // punti: al meglio dei 3 vittoria 2-0 = 5, 2-1 = 4, sconfitta 1-2 = 2, 0-2 = 1; set singolo vittoria = 3, sconfitta = 1
+        const pts = tre ? (win ? (sl === 0 ? 5 : 4) : (sw === 0 ? 1 : 2)) : (win ? 3 : 1);
+        for(const p of ps){ p.pg++; win ? p.v++ : p.s++; p.sw += sw; p.sl += sl; p.gw += gf; p.gl += gc; p.pt += pts; p.form.push(win); }
         const key = ps.map(p => p.key).sort().join('|');
         if(!C.has(key)) C.set(key, {names:ps.map(p => p.name).sort((x, y) => x.localeCompare(y, 'it')), pg:0, v:0, gw:0, gl:0});
         const c = C.get(key); c.pg++; if(win) c.v++; c.gw += gf; c.gl += gc;
       }
+      // ELO: la forza di una coppia e' la media dei due giocatori; chi vince prende quello che la coppia avversaria cede
+      const pa = m.a.map(player), pb = m.b.map(player);
+      const ra = (pa[0].elo + pa[1].elo) / 2, rb = (pb[0].elo + pb[1].elo) / 2;
+      const attesa = 1 / (1 + Math.pow(10, (rb - ra) / 400));
+      const variazione = ELO_K * ((aWin ? 1 : 0) - attesa);
+      pa.forEach(p => { p.elo += variazione; });
+      pb.forEach(p => { p.elo -= variazione; });
       const W = aWin ? m.a : m.b, L = aWin ? m.b : m.a;
       rows.push({
         data:m.data, win:W.map(n => player(n).name), lose:L.map(n => player(n).name),
@@ -345,6 +379,8 @@ input[type=number]{text-align:center; padding-inline:4px}
   const COLS = [
     {id:'pos',  label:'#',            get:p => p.rank,                                   dir:'asc'},
     {id:'name', label:'Giocatore',    get:p => p.name,                                   dir:'asc', text:true, always:true},
+    {id:'pt',   label:'Punti',        get:p => p.pt,                                     dir:'desc'},
+    {id:'elo',  label:'ELO',          get:p => Math.round(p.elo),                        dir:'desc', hint:'parte da 1000'},
     {id:'pg',   label:'Giocate',      get:p => p.pg,                                     dir:'desc'},
     {id:'v',    label:'Vinte',        get:p => p.v,                                      dir:'desc'},
     {id:'s',    label:'Perse',        get:p => p.s,                                      dir:'desc'},
@@ -354,15 +390,15 @@ input[type=number]{text-align:center; padding-inline:4px}
     {id:'diff', label:'Diff. giochi', get:p => diff(p),                                  dir:'desc'},
     {id:'form', label:'Forma',        get:p => p.form.slice(-5).filter(Boolean).length,  dir:'desc', hint:'vittorie nelle ultime 5'}
   ];
-  let sortCol = 'pct', sortDir = 'desc', flt = {}, openPanel = '';
+  let sortCol = 'pt', sortDir = 'desc', flt = {}, openPanel = '';
   let cols = new Set(COLS.map(c => c.id));
   try {
-    const sv = JSON.parse(localStorage.getItem('padel-colonne-v2') || 'null');
-    if(Array.isArray(sv)) cols = new Set(sv.filter(id => COLS.some(c => c.id === id)).concat('name'));
+    const hid = JSON.parse(localStorage.getItem('padel-colonne-nascoste') || 'null');
+    if(Array.isArray(hid)) cols = new Set(COLS.map(c => c.id).filter(id => id === 'name' || !hid.includes(id)));
   } catch(_){}
 
   function rankedPlayers(){
-    const ps = A.players.slice().sort((a, b) => pct(b) - pct(a) || b.v - a.v || diff(b) - diff(a) || b.pg - a.pg || a.name.localeCompare(b.name, 'it'));
+    const ps = A.players.slice().sort((a, b) => b.pt - a.pt || pct(b) - pct(a) || b.v - a.v || diff(b) - diff(a) || b.pg - a.pg || a.name.localeCompare(b.name, 'it'));
     ps.forEach((p, i) => { p.rank = i + 1; });
     return ps;
   }
@@ -404,7 +440,7 @@ input[type=number]{text-align:center; padding-inline:4px}
     pod.innerHTML = order.map(i => {
       const p = all[i];
       return `<div class="pod p${i + 1}"><span class="nm">${esc(p.name)}</span><span class="st">${p.v} vinte, ${p.s} perse</span>` +
-        `<div class="blk2"><span class="n">${i + 1}</span><span class="pc">${Math.round(pct(p) * 100)}%</span></div></div>`;
+        `<div class="blk2"><span class="n">${i + 1}</span><span class="pc">${p.pt} pt</span></div></div>`;
     }).join('');
     renderBoardControls();
     renderBoardTable();
@@ -440,6 +476,8 @@ input[type=number]{text-align:center; padding-inline:4px}
     const cell = {
       pos:  p => `<td class="rank">${p.rank}</td>`,
       name: p => `<td class="name l"><span class="rk">${p.rank}</span>${esc(p.name)}</td>`,
+      pt:   p => `<td><b>${p.pt}</b></td>`,
+      elo:  p => `<td>${Math.round(p.elo)}</td>`,
       pg:   p => `<td>${p.pg}</td>`,
       v:    p => `<td>${p.v}</td>`,
       s:    p => `<td>${p.s}</td>`,
@@ -454,7 +492,7 @@ input[type=number]{text-align:center; padding-inline:4px}
       : `<tr><td class="l" colspan="${vis.length}" style="color:var(--ink2)">Nessun giocatore corrisponde ai filtri.</td></tr>`;
     $('#board').innerHTML = `<div class="tw"><table><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></div>`;
     const col = COLS.find(c => c.id === sortCol);
-    $('#boardCount').textContent = `${ps.length} di ${total} giocatori. Ordinata per ${col.label.toLowerCase()}, ${sortDir === 'asc' ? 'dal più basso al più alto' : 'dal più alto al più basso'}.`;
+    $('#boardCount').textContent = `${ps.length} di ${total} giocatori. Ordinata per ${col.id === 'elo' ? 'ELO' : col.label.toLowerCase()}, ${sortDir === 'asc' ? 'dal più basso al più alto' : 'dal più alto al più basso'}.`;
     const n = activeFilters();
     $('#fltN').textContent = n ? ' (' + n + ')' : '';
   }
@@ -534,8 +572,8 @@ input[type=number]{text-align:center; padding-inline:4px}
     if(!id) return;
     if(e.target.checked) cols.add(id); else { cols.delete(id); delete flt[id]; }
     cols.add('name');
-    if(!cols.has(sortCol)){ sortCol = cols.has('pct') ? 'pct' : 'name'; sortDir = sortCol === 'pct' ? 'desc' : 'asc'; }
-    try { localStorage.setItem('padel-colonne-v2', JSON.stringify([...cols])); } catch(_){}
+    if(!cols.has(sortCol)){ sortCol = cols.has('pt') ? 'pt' : 'name'; sortDir = sortCol === 'pt' ? 'desc' : 'asc'; }
+    try { localStorage.setItem('padel-colonne-nascoste', JSON.stringify(COLS.map(c => c.id).filter(id => !cols.has(id)))); } catch(_){}
     renderBoardControls(); renderBoardTable();
   });
   document.addEventListener('input', e => {
